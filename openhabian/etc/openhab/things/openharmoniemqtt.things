@@ -1,0 +1,10 @@
+Bridge mqtt:broker:mqttbroker "MQTT Broker" [username="oh", password="oh", host="127.0.0.1"] {
+    Thing topic pi0w "Raspberry Pi Zero W MQTT" {
+        Channels:
+            Type string : Pi0WHarmonie "Pi Zero W Harmonie Topic" [ commandTopic="devices/pi0w/harmonie"]
+    }
+    Thing topic oh "openHAB MQTT" {
+        Channels:
+            Type string : OHHarmonie "openHAB Harmonie Topic" [ stateTopic="devices/oh/harmonie"]
+    }
+}

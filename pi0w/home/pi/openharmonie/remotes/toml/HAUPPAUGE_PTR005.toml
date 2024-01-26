@@ -1,0 +1,11 @@
+[[protocols]]
+name = "Hauppauge PT# R-005"
+protocol = "rc5"
+
+[protocols.scancodes]
+0x1c3d = "BTN_TRIGGER_HAPPY"
+0x1c3b = "BTN_TRIGGER_HAPPY1"
+0x1c14 = "BTN_TRIGGER_HAPPY2"
+0x1c16 = "BTN_TRIGGER_HAPPY3"
+0x1c25 = "BTN_TRIGGER_HAPPY4"
+0x1c17 = "BTN_TRIGGER_HAPPY5"

@@ -1,0 +1,12 @@
+[Unit]
+Description=MQTT Subscriber for remote control commands
+
+[Service]
+Restart=always
+RestartSec=5
+User=pi
+Group=pi
+ExecStart=/home/pi/openharmonie/mqttsubscriber.sh
+
+[Install]
+WantedBy=multi-user.target

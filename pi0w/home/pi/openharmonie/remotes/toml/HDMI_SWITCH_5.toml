@@ -1,0 +1,10 @@
+[[protocols]]
+name = "HDMI Switch 5 Inputs"
+protocol = "nec"
+
+[protocols.scancodes]
+0x8002 = "REMOTE_1"
+0x8006 = "REMOTE_2"
+0x8008 = "REMOTE_3"
+0x800a = "REMOTE_4"
+0x800d = "REMOTE_5"

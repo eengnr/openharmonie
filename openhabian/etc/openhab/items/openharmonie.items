@@ -1,0 +1,434 @@
+// Group to collect all items
+
+Group openHARMONIE_Group "openHARMONIE" <mediacontrol> ["RemoteControl"]
+
+// Items for MQTT communcation
+
+String Send_Harmonie_Command "Send Harmonie Command" <text> (openHARMONIE_Group) ["Status"] {channel="mqtt:topic:mqttbroker:pi0w:Pi0WHarmonie"}
+
+String Receive_Harmonie_Command "Receive Harmonie Command" <text> (openHARMONIE_Group) ["Status"] {channel="mqtt:topic:mqttbroker:oh:OHHarmonie"}
+
+// Items for activities
+
+Number OPENHARMONIE_Activity_Starting "openHARMONIE Activity starting" <mediacontrol> (openHARMONIE_Group) ["Status"] {
+	stateDescription=""[
+		options="0=PowerOff,
+			1=TV,
+			2=FireTV,
+			3=Chromecast,
+			4=Film,
+			5=Wii,
+			6=HDMI"
+	]
+}
+
+Number OPENHARMONIE_Activity_Started "openHARMONIE Activity started" <mediacontrol> (openHARMONIE_Group) ["Status"] {
+	stateDescription=""[
+		options="0=PowerOff,
+			1=TV,
+			2=FireTV,
+			3=Chromecast,
+			4=Film,
+			5=Wii,
+			6=HDMI"
+	]
+}
+
+// Items for sitemap
+
+Group openHARMONIE_RemoteControl_Group "Fernbedienungen" <mediacontrol> (openHARMONIE_Group) ["RemoteControl"]
+Group openHARMONIE_RemoteControl_Fernseher_Group "Fernseher" <mediacontrol> (openHARMONIE_RemoteControl_Group) ["RemoteControl"]
+Group openHARMONIE_RemoteControl_Receiver_Group "Receiver" <mediacontrol> (openHARMONIE_RemoteControl_Group) ["RemoteControl"]
+Group openHARMONIE_RemoteControl_BlurayPlayer_Group "Bluray Player" <mediacontrol> (openHARMONIE_RemoteControl_Group) ["RemoteControl"]
+Group openHARMONIE_RemoteControl_FireTV_Group "Fire TV" <mediacontrol> (openHARMONIE_RemoteControl_Group) ["RemoteControl"]
+Group openHARMONIE_RemoteControl_HDMISwitch3_Group "HDMI Switch 3" <mediacontrol> (openHARMONIE_RemoteControl_Group) ["RemoteControl"]
+Group openHARMONIE_RemoteControl_HDMISwitch5_Group "HDMI Switch 5" <mediacontrol> (openHARMONIE_RemoteControl_Group) ["RemoteControl"]
+
+// Items for remote controls
+
+Number OPENHARMONIE_RemoteControl "openHARMONIE Fernbedienung" <mediacontrol> (openHARMONIE_RemoteControl_Group) ["RemoteControl"] {
+	stateDescription=""[
+		options="0=OPENHARMONIE_POWER,
+			1=OPENHARMONIE_TV,
+			2=OPENHARMONIE_SUBTITLE,
+			3=OPENHARMONIE_TELETEXT,
+			4=OPENHARMONIE_SOURCE,
+			5=OPENHARMONIE_RED,
+			6=OPENHARMONIE_GREEN,
+			7=OPENHARMONIE_YELLOW,
+			8=OPENHARMONIE_BLUE,
+			9=OPENHARMONIE_GUIDE,
+			10=OPENHARMONIE_HOME,
+			11=OPENHARMONIE_OPTIONS,
+			12=OPENHARMONIE_UP,
+			13=OPENHARMONIE_DOWN,
+			14=OPENHARMONIE_LEFT,
+			15=OPENHARMONIE_RIGHT,
+			16=OPENHARMONIE_OK,
+			17=OPENHARMONIE_BACK,
+			18=OPENHARMONIE_INFO,
+			19=OPENHARMONIE_REWIND,
+			20=OPENHARMONIE_PAUSEPLAY,
+			21=OPENHARMONIE_FORWARD,
+			22=OPENHARMONIE_STOP,
+			23=OPENHARMONIE_RECORD,
+			24=OPENHARMONIE_VOLUMEUP,
+			25=OPENHARMONIE_VOLUMEDOWN,
+			26=OPENHARMONIE_MUTE,
+			27=OPENHARMONIE_CHANNELUP,
+			28=OPENHARMONIE_CHANNELDOWN,
+			29=OPENHARMONIE_FORMAT,
+			30=OPENHARMONIE_0,
+			31=OPENHARMONIE_1,
+			32=OPENHARMONIE_2,
+			33=OPENHARMONIE_3,
+			34=OPENHARMONIE_4,
+			35=OPENHARMONIE_5,
+			36=OPENHARMONIE_6,
+			37=OPENHARMONIE_7,
+			38=OPENHARMONIE_8,
+			39=OPENHARMONIE_9,
+			40=OPENHARMONIE_SOUND,
+			41=OPENHARMONIE_PICTURE,
+			42=OPENHARMONIE_PAUSE,
+			43=OPENHARMONIE_3D,
+			44=OPENHARMONIE_LIGHT,
+			45=OPENHARMONIE_SMARTTV,
+			46=OPENHARMONIE_LIST,
+			47=OPENHARMONIE_EXIT,
+			100=OPENHARMONIE_SKIPNEXT,
+			101=OPENHARMONIE_SKIPBACK,
+			102=OPENHARMONIE_TOPMENU,
+			103=OPENHARMONIE_POPUPMENU,
+			104=OPENHARMONIE_RECORDINGS,
+			105=OPENHARMONIE_OPENCLOSE,
+			106=OPENHARMONIE_FIRETVTV,
+			1000=OPENHARMONIE_APP_NETFLIX,
+			1001=OPENHARMONIE_APP_DISNEY,
+			1002=OPENHARMONIE_APP_JOYN,
+			1003=OPENHARMONIE_APP_RTLPLUS,
+			1004=OPENHARMONIE_APP_ZDF,
+			1005=OPENHARMONIE_APP_ARD,
+			1006=OPENHARMONIE_APP_NEWPIPE,
+			1007=OPENHARMONIE_APP_YOUTUBE,
+			1008=OPENHARMONIE_APP_AMAZONVIDEO,
+			1009=OPENHARMONIE_APP_AMAZONMUSIC,
+			1010=OPENHARMONIE_APP_APPLETV,
+			1011=OPENHARMONIE_APP_ARTE,
+			1012=OPENHARMONIE_APP_FREEVEE,
+			2000=OPENHARMONIE_TV_ARD,
+			2001=OPENHARMONIE_TV_ZDF,
+			2002=OPENHARMONIE_TV_BR,
+			2003=OPENHARMONIE_TV_RTL,
+			2004=OPENHARMONIE_TV_SAT1,
+			2005=OPENHARMONIE_TV_PRO7,
+			2006=OPENHARMONIE_TV_VOX,
+			2007=OPENHARMONIE_TV_RTL2,
+			2008=OPENHARMONIE_TV_NITRO,
+			2009=OPENHARMONIE_TV_TELE5"
+			// Hardware buttons from 0-41, virtual buttons from 42 on
+	]
+}
+
+Number TV_HISENSE_EN2BF27H_RemoteControl "Fernseher Fernbedienung" <mediacontrol> (openHARMONIE_RemoteControl_Fernseher_Group) ["RemoteControl"] {
+	stateDescription=""[
+		options="0=REMOTE_POWER,
+			1=REMOTE_INPUT,
+			2=REMOTE_1,
+			3=REMOTE_2,
+			4=REMOTE_3,
+			5=REMOTE_4,
+			6=REMOTE_5,
+			7=REMOTE_6,
+			8=REMOTE_7,
+			9=REMOTE_8,
+			10=REMOTE_9,
+			11=REMOTE_0,
+			12=REMOTE_GUIDE,
+			13=REMOTE_SUBTITLE,
+			14=REMOTE_RED,
+			15=REMOTE_GREEN,
+			16=REMOTE_YELLOW,
+			17=REMOTE_BLUE,
+			18=REMOTE_TEXT,
+			19=REMOTE_TXT,
+			20=REMOTE_UP,
+			21=REMOTE_LEFT,
+			22=REMOTE_RIGHT,
+			23=REMOTE_DOWN,
+			24=REMOTE_OK,
+			25=REMOTE_BACK,
+			26=REMOTE_EXIT,
+			27=REMOTE_HOME,
+			28=REMOTE_VOLUMEUP,
+			29=REMOTE_VOLUMEDOWN,
+			30=REMOTE_CHLIST,
+			31=REMOTE_MUTE,
+			32=REMOTE_CHANNELUP,
+			33=REMOTE_CHANNELDOWN,
+			34=REMOTE_REWIND,
+			35=REMOTE_PLAY,
+			36=REMOTE_FORWARD,
+			37=REMOTE_PAUSE,
+			38=REMOTE_AUDIOONLY,
+			39=REMOTE_STOP,
+			40=REMOTE_APPS,
+			41=REMOTE_YOUTUBE,
+			42=REMOTE_NETFLIX,
+			43=REMOTE_RAKUTENTV"
+	]
+}
+
+Number BLURAY_PLAYER_PIONEER_RemoteControl "Bluray Player Fernbedienung" <mediacontrol> (openHARMONIE_RemoteControl_BlurayPlayer_Group) ["RemoteControl"] {
+	stateDescription=""[
+		options="0=REMOTE_POWER,
+			1=REMOTE_FUNCTION,
+			2=REMOTE_OPENCLOSE,
+			3=REMOTE_HOMEMEDIAGALLERY,
+			4=REMOTE_RESOLUTION,
+			5=REMOTE_NETCONTENTS,
+			6=REMOTE_KEYLOCK,
+			7=REMOTE_KARAOKE,
+			8=REMOTE_MICVOLUMEUP,
+			9=REMOTE_DIMMER,
+			10=REMOTE_SLEEP,
+			11=REMOTE_EXIT,
+			12=REMOTE_MICVOLUMEDOWN,
+			13=REMOTE_VIRTUALSOUND,
+			14=REMOTE_SOUND,
+			15=REMOTE_VOLUMEUP,
+			16=REMOTE_SOUNDRETRIEVER,
+			17=REMOTE_CDSACD,
+			18=REMOTE_VOLUMEDOWN,
+			19=REMOTE_USBREC,
+			20=REMOTE_DISPLAY,
+			21=REMOTE_MUTE,
+			22=REMOTE_TOPMENU,
+			23=REMOTE_POPUPMENU,
+			24=REMOTE_UP,
+			25=REMOTE_LEFT,
+			26=REMOTE_RIGHT,
+			27=REMOTE_DOWN,
+			28=REMOTE_ENTER,
+			29=REMOTE_HOMEMENU,
+			30=REMOTE_RETURN,
+			31=REMOTE_REPLAY,
+			32=REMOTE_TOOLS,
+			33=REMOTE_CONTINUED,
+			34=REMOTE_SKIPSEARCH,
+			35=REMOTE_REWIND,
+			36=REMOTE_PLAY,
+			37=REMOTE_FORWARD,
+			38=REMOTE_SKIPBACK,
+			39=REMOTE_PAUSE,
+			40=REMOTE_STOP,
+			41=REMOTE_SKIPNEXT,
+			42=REMOTE_1,
+			43=REMOTE_2,
+			44=REMOTE_3,
+			45=REMOTE_4,
+			46=REMOTE_5,
+			47=REMOTE_6,
+			48=REMOTE_7,
+			49=REMOTE_8,
+			50=REMOTE_9,
+			51=REMOTE_0,
+			52=REMOTE_AUDIO,
+			53=REMOTE_SUBTITLE,
+			54=REMOTE_ANGLE,
+			55=REMOTE_CLEAR,
+			56=REMOTE_REPEAT,
+			57=REMOTE_AB,
+			58=REMOTE_PROGRAM,
+			59=REMOTE_BOOKMARK,
+			60=REMOTE_ZOOM,
+			61=REMOTE_INDEX,
+			62=REMOTE_TV_POWER2,
+			63=REMOTE_TV_CHANNELUP,
+			64=REMOTE_TV_VOLUMEUP,
+			65=REMOTE_TV_INPUT,
+			66=REMOTE_TV_CHANNELDOWN,
+			67=REMOTE_TV_VOLUMEDOWN"
+	]
+}
+
+Number RECEIVER_SAMSUNG_KD_RemoteControl "Receiver Fernbedienung" <mediacontrol> (openHARMONIE_RemoteControl_Receiver_Group) ["RemoteControl"] {
+	stateDescription=""[
+		options="0=REMOTE_0,
+			1=REMOTE_1,
+			2=REMOTE_2,
+			3=REMOTE_3,
+			4=REMOTE_4,
+			5=REMOTE_5,
+			6=REMOTE_6,
+			7=REMOTE_7,
+			8=REMOTE_8,
+			9=REMOTE_9,
+			10=REMOTE_AUFNAHMEN,
+			11=REMOTE_BACK,
+			12=REMOTE_BLUE,
+			13=REMOTE_CHANNELDOWN,
+			14=REMOTE_CHANNELUP,
+			15=REMOTE_DOWN,
+			16=REMOTE_EXIT,
+			17=REMOTE_FORWARD,
+			18=REMOTE_GREEN,
+			19=REMOTE_INFO,
+			20=REMOTE_LEFT,
+			21=REMOTE_MENU,
+			22=REMOTE_MUTE,
+			23=REMOTE_OK,
+			24=REMOTE_OPT,
+			25=REMOTE_PAUSEPLAY,
+			26=REMOTE_POWER,
+			27=REMOTE_PROGRAMM,
+			28=REMOTE_REC,
+			29=REMOTE_RED,
+			30=REMOTE_REWIND,
+			31=REMOTE_RIGHT,
+			32=REMOTE_SELECTVIDEO,
+			33=REMOTE_STOP,
+			34=REMOTE_SUCHE,
+			35=REMOTE_TEXT,
+			36=REMOTE_TVRADIO,
+			37=REMOTE_TV,
+			38=REMOTE_UP,
+			39=REMOTE_VOLUMEDOWN,
+			40=REMOTE_VOLUMEUP,
+			41=REMOTE_YELLOW"
+	]
+}
+
+Number FIRETV_RemoteControl "FireTV Fernbedienung" <mediacontrol> (openHARMONIE_RemoteControl_FireTV_Group) ["RemoteControl"] {
+	stateDescription=""[
+		// Uses Linux key codes
+		// https://github.com/torvalds/linux/blob/master/include/uapi/linux/input-event-codes.h
+		options="116=KEY_POWER,
+			217=KEY_SEARCH,
+			105=KEY_LEFT,
+			103=KEY_UP,
+			106=KEY_RIGHT,
+			108=KEY_DOWN,
+			96=KEY_KPENTER,
+			158=KEY_BACK,
+			172=KEY_HOMEPAGE,
+			139=KEY_MENU,
+			168=KEY_REWIND,
+			164=KEY_PLAYPAUSE,
+			208=KEY_FASTFORWARD,
+			113=KEY_MUTE,
+			115=KEY_VOLUMEUP,
+			114=KEY_VOLUMEDOWN,
+			362=KEY_PROGRAM,
+			402=KEY_CHANNELUP,
+			403=KEY_CHANNELDOWN,
+			1000=REMOTE_APP_NETFLIX,
+			1001=REMOTE_APP_DISNEY,
+			1002=REMOTE_APP_JOYN,
+			1003=REMOTE_APP_RTLPLUS,
+			1004=REMOTE_APP_ZDF,
+			1005=REMOTE_APP_ARD,
+			1006=REMOTE_APP_NEWPIPE,
+			1007=REMOTE_APP_YOUTUBE,
+			1008=REMOTE_APP_AMAZONVIDEO,
+			1009=REMOTE_APP_AMAZONMUSIC,
+			1010=REMOTE_APP_APPLETV,
+			1011=REMOTE_APP_ARTE,
+			1012=REMOTE_APP_FREEVEE,
+			2000=REMOTE_CONNECT,
+			2001=REMOTE_DISCONNECT"
+	]
+}
+ 
+Number HDMI_SWITCH_3_RemoteControl "HDMI Switch 3 Fernbedienung" <mediacontrol> (openHARMONIE_RemoteControl_HDMISwitch3_Group) ["RemoteControl"] {
+	stateDescription=""[
+		options="0=REMOTE_1,
+			1=REMOTE_2,
+			2=REMOTE_3,
+			3=REMOTE_POWER,
+			4=REMOTE_PREVIOUS,
+			5=REMOTE_NEXT"
+	]
+}
+
+Number HDMI_SWITCH_5_RemoteControl "HDMI Switch 5 Fernbedienung" <mediacontrol> (openHARMONIE_RemoteControl_HDMISwitch5_Group) ["RemoteControl"] {
+	stateDescription=""[
+		options="0=REMOTE_1,
+			1=REMOTE_2,
+			2=REMOTE_3,
+			3=REMOTE_4,
+			4=REMOTE_5"
+	]
+}
+
+// Items for power states
+
+Switch TV_HISENSE_EN2BF27H_OnOff "Fernseher Schalter" <switch> (Fernseher) ["Switch"]
+Switch BLURAY_PLAYER_PIONEER_OnOff "Bluray Player Schalter" <switch> (BlurayPlayer) ["Switch"]
+Switch RECEIVER_SAMSUNG_KD_OnOff "Receiver Schalter" <switch> (Receiver) ["Switch"]
+
+// Items for input states
+
+Number TV_HISENSE_EN2BF27H_Input "Fernseher Input" <mediacontrol> (Fernseher) ["Status"] {
+	stateDescription=""[
+		options="0=HDMI_1,
+			1=HDMI_2"
+	]
+}
+
+Number BLURAY_PLAYER_PIONEER_Input "Bluray Player Input" <mediacontrol> (BlurayPlayer) ["Status"] {
+	stateDescription=""[
+		options="0=FM,
+			1=BLUETOOTH,
+			2=AUX,
+			3=PORTABLE,
+			4=ARC,
+			5=OPTICAL1,
+			6=OPTICAL2,
+			7=HDMI1,
+			8=HDMI2"
+	]
+}
+
+Number HDMI_SWITCH_3_Input "HDMI Switch 3 Input" <mediacontrol> (Fernseher) ["Status"] {
+	stateDescription=""[
+		options="0=HDMI1,
+			1=HDMI2,
+			2=HDMI3"
+	]
+}
+
+Number HDMI_SWITCH_5_Input "HDMI Switch 5 Input" <mediacontrol> (Fernseher) ["Status"] {
+	stateDescription=""[
+		options="0=HDMI1,
+			1=HDMI2,
+			2=HDMI3,
+			3=HDMI4,
+			5=HDMI5"
+	]
+}
+
+// Items for voice commands
+
+Group openHARMONIE_AVC_Group "openHARMONIE" <mediacontrol> (openHARMONIE_Group) ["RemoteControl"] {alexa="Other"}
+Switch openHARMONIE_AVC_Activity_TV "Fernseher" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Activity_FireTV "Fire TV" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Activity_Chromecast "Chromecast" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Activity_Film "Film" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Activity_Wii "Wii" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Activity_HDMI "HDMI" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Button_Pause "openHARMONIE-Pause" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Button_Play "openHARMONIE-Wiedergabe" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Button_VolUp "openHARMONIE-Lauter" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Button_VolDown "openHARMONIE-Leiser" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Favorite_DasErste "Das Erste" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Favorite_ZDF "ZDF" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Favorite_BR "BR" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Favorite_RTL "RTL" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Favorite_Sat1 "Sat.1" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Favorite_ProSieben "Pro Sieben" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Favorite_RTLPlus "RTL Plus" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Favorite_Netflix "Netflix" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Favorite_Disney "Disney Plus" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Favorite_Joyn "Joyn" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Favorite_AmazonVideo "Amazon Video" (openHARMONIE_AVC_Group) {alexa="ToggleState"}

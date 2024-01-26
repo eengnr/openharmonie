@@ -1,0 +1,13 @@
+[[protocols]]
+name = "ILIFE V7S"
+protocol = "necx"
+
+[protocols.scancodes]
+0x4055aa = "REMOTE_UP"
+0x405566 = "REMOTE_DOWN"
+0x4055cc = "REMOTE_LEFT"
+0x405522 = "REMOTE_RIGHT"
+0x405544 = "REMOTE_CLEAN"
+0x4055ee = "REMOTE_CIRCLES"
+0x405511 = "REMOTE_HOME"
+0x405599 = "REMOTE_SQUARES"
