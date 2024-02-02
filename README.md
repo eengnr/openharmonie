@@ -39,7 +39,7 @@ That's why I'm looking for an alternative. And what could be better than buildin
 - 0️⃣ 3D printed housing
 - 0️⃣ Refactor code to node modules
 - 🚧 Refactor documentation and move to a repository
-- 0️⃣ Add pictures to the documentation
+- ✅ Add pictures to the documentation
 - 0️⃣ Bluetooth support
 
 ## Prerequisites
