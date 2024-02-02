@@ -344,6 +344,13 @@ Connect IR LED to 5 V pin and use a transistor as switch. The transistor is togg
 Note: You can use three IR Emitter LEDs in a row. The resistor then has to be changed to be in the range of 27 - 75 Ohm (1.5 to 1.2 V LED voltage)
 If more than three LEDs are necessary, they have to be put parallel to the existing three. More current is then drawn from the 5 V pin. Research needs to be done how high this current can be :)
 
+##### Wiring diagram
+
+![Wiring Diagram](./images/openHARMONIE_Steckplatine.svg)
+
+The wiring diagram shows the setup with three IR leds and two resistors with 22 and 10 Ohm.
+
+
 #### Software setup
 
 ##### Enable GPIO pins
@@ -763,6 +770,14 @@ After everything is configured and set up, place the Raspberry Pi Zero W somewhe
 It's best if the distance to the devices is short.
 
 Then have fun with your new setup!
+
+## Images
+
+![Prototype with breadboard](./images/prototype_breadboard.jpg)
+Prototype with breadboard
+
+![Prototype soldered on board](./images/prototype_soldered.jpg)
+Prototype soldered on board
 
 ## License
 
