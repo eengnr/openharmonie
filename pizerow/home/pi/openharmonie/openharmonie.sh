@@ -7,7 +7,7 @@ if [[ ! -p "$mqttpipe" ]]; then
     mkfifo $mqttpipe
 fi
 echo "Subscribe..."
-(mosquitto_sub -h broker.home -t "devices/pi0w/harmonie" -u pi0w -P pi0w > $mqttpipe) & # 2>/dev/null) &
+(mosquitto_sub -h broker.home -t "devices/pi0w/harmonie" -u pi -P pi > $mqttpipe) & # 2>/dev/null) &
 while read line <$mqttpipe
 do
     # Execute command in background
