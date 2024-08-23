@@ -1,0 +1,2 @@
+SUBSYSTEM=="lirc", KERNEL=="lirc*", DRIVERS=="gpio-ir-tx", SYMLINK+="lirc-tx"
+SUBSYSTEM=="lirc", KERNEL=="lirc*", DRIVERS=="gpio_ir_recv", SYMLINK+="lirc-recv"

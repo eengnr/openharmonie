@@ -1,0 +1,12 @@
+[Unit]
+Description=openHARMONIE MQTT subscriber for remote control commands
+
+[Service]
+Restart=always
+RestartSec=5
+User=openharmonie
+Group=openharmonie
+ExecStart=/home/pi/openharmonie/openharmonie.sh
+
+[Install]
+WantedBy=multi-user.target

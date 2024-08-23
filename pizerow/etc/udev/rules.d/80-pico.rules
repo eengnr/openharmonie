@@ -1,0 +1,1 @@
+KERNEL=="tty*", ATTRS{manufacturer}=="Raspberry Pi", ATTRS{product}=="Pico W", SYMLINK+="picow"

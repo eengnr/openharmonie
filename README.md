@@ -40,7 +40,7 @@ That's why I'm looking for an alternative. And what could be better than buildin
 - 0️⃣ Refactor code to node modules
 - 🚧 Refactor documentation and move to a repository
 - ✅ Add pictures to the documentation
-- 0️⃣ Bluetooth support
+- 🚧 Bluetooth support
 
 ## Prerequisites
 
@@ -60,12 +60,14 @@ It took me almost three months to figure everything out and implement it.
 
 - Raspberry Pi 4 (or anything else where openHAB is running)
 - Raspberry Pi Zero W
+- Raspberry Pi Pico W (for optional Bluetooth)
 - IR Receiver VS1838B
 - IR LEDs (3 at least)
 - some resistors
 - 2N2222 transistor
 - some (2-wire) cables
 - circuit board for IR hardware
+- Micro USB to Micro USB cable to connect the Zero and Pico
 - soldering equipment
 - spare remote control, e.g. from a no longer used TV (will be the "physical" openHARMONIE remote control)
 
@@ -257,27 +259,45 @@ See `/etc/openhab/sitemaps/openharmonie.sitemap`
 
 ## Pi Zero W configuration
 
+### Setup a non-root user
+
+- Add a new user with name `openharmonie`
+
+  `$ sudo adduser openharmonie`
+
+- Enter `openharmonie` as password and confirm all other values
+
+- Add the user to the groups `dialout` to send commands via serial connection
+
+  `$ sudo adduser openharmonie dialout`
+
+- Add the user to the group `video` to send commands via IR
+
+  `$ sudo adduser openharmonie video`
+
+Note: The files will be kept in the `pi` user home folder and owned for simplicity.
+
 ### Listener for MQTT commands
 
 #### Shell script as MQTT client
 
-A shell script `mqttsubscriber.sh` is running on the Pi Zero W which is receiving MQTT updates and calls another script to send out IR commands (or adb commands for Fire TV).
+A shell script `openharmonie.sh` is running on the Pi Zero W which is receiving MQTT updates and calls another script to send out IR commands (or adb commands for Fire TV).
 
 The script watches if the `mosquitto_sub` process is still running every 5 seconds; if not, the script exits.
 
-`$ touch ~/openharmonie/mqttsubscriber.sh && chmod +x ~/openharmonie/mqttsubscriber.sh`
+`$ touch ~/openharmonie/openharmonie.sh && chmod +x ~/openharmonie/openharmonie.sh`
 
-See `/home/pi/openharmonie/mqttsubscriber.sh`
+See `/home/pi/openharmonie/openharmonie.sh`
 
 #### Turn the MQTT shell script to a system service
 
-- Create a new file `mqttsubscriber.service` in `~/openharmonie`
+- Create a new file `openharmonie.service` in `~/openharmonie`
 
-  See `/home/pi/openharmonie/mqttsubscriber.service`
+  See `/home/pi/openharmonie/openharmonie.service`
 
 - Copy the file to the `systemd` configuration folder
 
-  `$ sudo cp mqttsubscriber.service /etc/systemd/system`
+  `$ sudo cp openharmonie.service /etc/systemd/system`
 
 - Reload the systemd configuration
 
@@ -285,30 +305,31 @@ See `/home/pi/openharmonie/mqttsubscriber.sh`
 
 - Enable and start the mqtt subscriber service
 
-  `$ sudo systemctl enable mqttsubscriber.service`
+  `$ sudo systemctl enable openharmonie.service`
   
-  `$ sudo systemctl start mqttsubscriber.service`
+  `$ sudo systemctl start openharmonie.service`
 
 - Check that it's running
 
-  `$ systemctl status mqttsbscriber.service`
+  `$ systemctl status openharmonie.service`
   ```
-  ● mqttsubscriber.service - MQTT Subscriber for remote control commands
-      Loaded: loaded (/etc/systemd/system/mqttsubscriber.service; enabled; vendor preset: enabled)
+  ● openharmonie.service - MQTT Subscriber for remote control commands
+      Loaded: loaded (/etc/systemd/system/openharmonie.service; enabled; vendor preset: enabled)
       Active: active (running) since Fri 2024-01-12 12:53:06 CET; 4s ago
-    Main PID: 22855 (mqttsubscriber.)
+    Main PID: 22855 (openharmonie.sh)
         Tasks: 5 (limit: 414)
           CPU: 94ms
-      CGroup: /system.slice/mqttsubscriber.service
-              ├─22855 /bin/bash /home/pi/openharmonie/mqttsubscriber.sh
-              ├─22856 /bin/bash /home/pi/openharmonie/mqttsubscriber.sh
-              ├─22857 /bin/bash /home/pi/openharmonie/mqttsubscriber.sh
+      CGroup: /system.slice/openharmonie.service
+              ├─22855 /bin/bash /home/pi/openharmonie/openharmonie.sh
+              ├─22856 /bin/bash /home/pi/openharmonie/openharmonie.sh
+              ├─22857 /bin/bash /home/pi/openharmonie/openharmonie.sh
               ├─22859 sleep 5
-              └─22860 mosquitto_sub -h broker.home -t devices/pi0w/harmonie -u pi -P pi
+              ├─22860 mosquitto_sub -h broker.home -t devices/pi0w/harmonie -u pi -P pi
+              └─22931 sleep .1
 
 
   Jan 03 13:35:20 pi0w systemd[1]: Started MQTT Subscriber for remote control commands.
-  Jan 03 13:35:20 pi0w mqttsubscriber.sh[18885]: Listening...
+  Jan 03 13:35:20 pi0w openharmonie.sh[18885]: Listening...
   ```
 
 ### Setup for infrared on Raspberry Pi Zero W
@@ -676,8 +697,8 @@ Then reboot the Pi Zero W. If everything works, you should see an update of the 
 
 ### Setup connection to Fire TV
 
-The Fire TV can be controlled with adb or Bluetooth.
-We will use adb for now.
+The Fire TV can be controlled with adb and Bluetooth.
+We will use a mixture depending on the commands.
 
 - Install `adb` on the Pi Zero W
 
@@ -742,7 +763,65 @@ Note: The correct activites for apps can be found via adb:
 Note: the supported keycodes for the `amzkeyboard` input can be found with
 `$ adb shell getevent -lp`
 
-TODO: Sending the `input keyevent` is quite slow, because the `input.jar` needs to be started every time. Sending an event with `sendevent` is faster, but for this the virtual keyboard must be available. It would be better to figure out an alternative control via Bluetooth.
+Note:
+Sending the `input keyevent` is quite slow, because the `input.jar` needs to be started every time.
+Sending an event with `sendevent` is faster, but for this the virtual keyboard must be available.
+As an alternative to the virtual keyboard, the `sendevent` can be sent to the device which appears if the Fire TV remote was used.
+But this is not always available.
+The best way to control the Fire TV is via Bluetooth. The `FIRETV.sh` tries to use the best available way to send the commands.
+
+## Pi Pico W configuration
+
+The Pi Pico W acts as a Bluetooth keyboard to send commands to a Fire TV.
+It receives the key to send via a serial USB connection from the Pi Zero W.
+With the provided sketch, it's possible to pair and connect only one device.
+
+See `openHARMONIE.ino`.
+
+TODO: Make it possible to pair multiple devices and connect only the one which is relevant for the current activity.
+
+### Flash software to Pi Pico W
+
+- Download and install Arduino IDE: https://www.arduino.cc/en/software
+
+- Open Arduino IDE and go to `File` > `Preferences...` > `Additional Boards Manager URLs`. Paste `https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json` there and click `OK`.
+
+- Open the `openHARMONIE.ino` sketch.
+
+- Go to `Tools` > `Board` > `Boards Manager...`, search for `Raspberry Pi Pico` and click `INSTALL`.
+
+- Connect the Pico W with a USB cable to your computer which is running Arduino IDE.
+
+- In the `Select Board` dropdown, go to `Select Other Board and Port`, select `Raspberry Pi Pico W` in the Boards list. The port should be discoverd as `/dev/ttyACM0` on Linux.
+
+- Go to `Tools` > `IP/Bluetooth Stack` and select `IPv4 + Bluetooth`.
+
+- Click the `Verify` checkmark and if no errors are shown, click the `Upload` checkmark to flash the code to the Pi Pico W.
+
+- After this you should see a device `openHARMONIE` e.g. in the Bluetooth pairing menu of your mobile phone (but don't connect to it).
+
+### Add named device to Pi Zero W
+
+Simlar to the IR sender/receiver devices a named device for the serial connection between Pi Zero W and Pi Pico W is created.
+
+- Create a file `/etc/udev/rules.d/80-pico.rules` with the following content:
+
+  `$ sudo vi /etc/udev/rules.d/80-pico.rules`
+    ```
+    KERNEL=="tty*", ATTRS{manufacturer}=="Raspberry Pi", ATTRS{product}=="Pico W", SYMLINK+="picow"
+    ```
+
+- Then save and exit and shut down the Pi Zero W.
+
+- Connect the Pi Zero W and Pi Pico W with a Micro USB to Micro USB cable. Use the USB port on the Pi Zero W which is not used for power.
+
+- Start up the Pi Zero W. The serial device should be available as `/dev/picow` and can be used by the `FIRETV.sh`.
+
+### Connect Fire TV to Bluetooth device
+
+- In the settings of the Fire TV, go to Bluetooth and game controllers and search for a new device named `openHARMONIE`.
+
+- Connect to it!
 
 ## Alexa voice commands integration
 
