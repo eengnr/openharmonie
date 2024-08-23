@@ -49,7 +49,7 @@ It took me almost three months to figure everything out and implement it.
 
 ### Skills and basic software setup
 
-- openHAB (Openhabian) is set up and running on Raspberry Pi 4 (Bullseye with openHAB 4.1.1 at time of writing)
+- openHAB (Openhabian) is set up and running on Raspberry Pi 5 (Bookworm with openHAB 4.2.1)
 - openHAB has the JavaScript binding installed and the openhab_rules_tools
 - Knowledge about how to use openHAB is already available
 - Raspbian Lite is set up and running on Raspberry Pi Zero W (Bullseye)
@@ -58,7 +58,7 @@ It took me almost three months to figure everything out and implement it.
 
 ### Necessary hardware
 
-- Raspberry Pi 4 (or anything else where openHAB is running)
+- Raspberry Pi 5 (or anything else where openHAB is running)
 - Raspberry Pi Zero W
 - Raspberry Pi Pico W (for optional Bluetooth)
 - IR Receiver VS1838B
@@ -275,7 +275,17 @@ See `/etc/openhab/sitemaps/openharmonie.sitemap`
 
   `$ sudo adduser openharmonie video`
 
-Note: The files will be kept in the `pi` user home folder and owned for simplicity.
+Note: The files will be placed in the `pi` user home folder and owned for simplicity.
+
+### Move `/tmp/` folder to RAM
+
+Add the following line in `/etc/fstab`.
+
+`$ sudo vi /etc/fstab`
+
+```
+tmpfs /tmp tmpfs defaults,size=64M 0 0
+```
 
 ### Listener for MQTT commands
 
