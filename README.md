@@ -21,7 +21,7 @@ That's why I'm looking for an alternative. And what could be better than buildin
 
 ## Overview
 
-- Logic implementation (which activity needs which devices in which states, ...) will be done with openHAB running on a Raspberry Pi 4.
+- Logic implementation (which activity needs which devices in which states, ...) will be done with openHAB running on a Raspberry Pi 5.
 - Sending of IR commands to devices will be done with a Raspberry Pi Zero W.
 - Receiving of IR commands will also be done with the Pi Zero W.
 - Communication between both Raspberrys will be done with MQTT.
@@ -79,7 +79,7 @@ It took me almost three months to figure everything out and implement it.
 
 Note: with this setup, you can easily add multiple Pi Zero W for different rooms and control them all from openHAB.
 
-### Setup MQTT Broker (running on openHAB Raspberry Pi 4)
+### Setup MQTT Broker (running on openHAB Raspberry Pi 5)
 
 - Install `mosquitto`:
 
