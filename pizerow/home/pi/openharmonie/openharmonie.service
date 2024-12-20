@@ -1,5 +1,7 @@
 [Unit]
 Description=openHARMONIE MQTT subscriber for remote control commands
+Wants=network-online.target
+After=network-online.target
 
 [Service]
 Restart=always

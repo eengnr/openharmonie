@@ -703,6 +703,9 @@ Forwarding the button name via MQTT to openHAB can be done with a script.
 
   See `/home/pi/openharmonie/remotes/receive_command.sh`
 
+Note: If using DNS names to communicate with the MQTT broker, it's recommended to install `dnsmasq` to have a DNS cache.
+Otherwise, each time the `mosquitto_pub` is called a DNS lookup is necessary which can cost time.
+
 Then reboot the Pi Zero W. If everything works, you should see an update of the `Receive_Harmonie_Command` item after pressing a button on the remote.
 
 ### Setup connection to Fire TV

@@ -10,13 +10,19 @@ echo "Subscribe..."
 (mosquitto_sub -h broker.home -t "devices/pi0w/harmonie" -u pi -P pi > $mqttpipe) & # 2>/dev/null) &
 while true
 do
-    read line < $mqttpipe
+    if [[ -f "$mqttpipe" ]]; then
+        read line < $mqttpipe
+    else
+        echo "pipe not available anymore..."
+        shutdown
+    fi
     if [[ ! -z $line ]]
     then
         # Execute command in background
         # Otherwise mosquitto_sub could hang/crash if sending is not finished, but next command is already received
         (/home/pi/openharmonie/remotes/send_command.sh $line) &
-        : > $mqttpipe
+        sleep .5 # Pause shortly to ignore too fast inputs
+        : > $mqttpipe # Clear pipe
     fi
     sleep .1
 done
@@ -28,10 +34,6 @@ do
     sleep 5
     if ! pgrep "mosquitto_sub" > /dev/null; then
         echo "mosquitto_sub not running anymore..."
-        shutdown
-    fi
-    if [[ ! -e "$mqttpipe" ]]; then
-        echo "pipe not available anymore..."
         shutdown
     fi
 done
