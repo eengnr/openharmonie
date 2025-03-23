@@ -52,7 +52,7 @@ It took me almost three months to figure everything out and implement it.
 - openHAB (Openhabian) is set up and running on Raspberry Pi 5 (Bookworm with openHAB 4.2.1)
 - openHAB has the JavaScript binding installed and the openhab_rules_tools
 - Knowledge about how to use openHAB is already available
-- Raspbian Lite is set up and running on Raspberry Pi Zero W (Bullseye)
+- Raspbian Lite is set up and running on Raspberry Pi Zero W (Bullseye, Bookworm does not work properly for this as of March 2025!)
 - Knowledge about basic Linux commands is already available
 - Knowledge how to solder stuff on a circuit board is already available
 
@@ -128,7 +128,7 @@ See `/etc/openhab/items/openharmonie.items`
 
 - Install `mosquitto_sub`:
 
-  `$ sudo apt install mosquitto-client`
+  `$ sudo apt install mosquitto-clients`
 
 ### Test the setup
 
@@ -215,6 +215,8 @@ See `/etc/openhab/etc/sitemaps/openharmonie.sitemap`
 
 Note: The sitemap uses icons which are saved in `/etc/openhab/icons/classic`. This was the only way to get the icons in the openHAB Android app and in the Basic UI.
 
+The sitemap includes a web view to load a CSS for the Basic UI.
+
 Additionally, the sitemap uses light controls which are not part of the setup here.
 
 ### Voice commands
@@ -263,7 +265,7 @@ See `/etc/openhab/sitemaps/openharmonie.sitemap`
 
 - Add a new user with name `openharmonie`
 
-  `$ sudo adduser openharmonie`
+  `$ sudo adduser --no-create-home openharmonie`
 
 - Enter `openharmonie` as password and confirm all other values
 
@@ -344,7 +346,7 @@ See `/home/pi/openharmonie/openharmonie.sh`
 
 ### Setup for infrared on Raspberry Pi Zero W
 
-Note that `LIRC` is not necessary on Bullseye.Instead, the kernel already supports multiple IR protocols.
+Note that `LIRC` is not necessary on Bullseye. Instead, the kernel already supports multiple IR protocols.
 
 Receiving/sending can be done with `ir-keytable` and `ir-ctl` on Bullseye.
 
@@ -447,7 +449,7 @@ We can now use `/dev/lirc-tx` to send IR signals and `/dev/lirc-recv` to receive
 
 - Install `ir-keytable`
 
-  `$ sudo apt install ir-keytable -y`
+  `$ sudo apt install ir-keytable`
 
 Note: at time of writing, version `1.20.0` of `ir-keytable` is used.
 
@@ -685,7 +687,7 @@ Processing the input events is done with `triggerhappy`. The same keycodes have 
 
 - Copy the file to the triggerhappy config folder
 
-  `$ sudo cp /home/pi/openharmonie/remotes/thd/openharmonie.conf /etc/triggerhappy/triggers.d/openharmonie.conf`
+  `$ sudo cp /home/pi/openharmonie/remotes/thd/openharmonie.conf /etc/triggerhappy/triggers.d`
 
 - Restart the triggerhappy service
 
@@ -706,6 +708,8 @@ Forwarding the button name via MQTT to openHAB can be done with a script.
 Note: If using DNS names to communicate with the MQTT broker, it's recommended to install `dnsmasq` to have a DNS cache.
 Otherwise, each time the `mosquitto_pub` is called a DNS lookup is necessary which can cost time.
 
+  `$ sudo apt install dnsmasq`
+
 Then reboot the Pi Zero W. If everything works, you should see an update of the `Receive_Harmonie_Command` item after pressing a button on the remote.
 
 ### Setup connection to Fire TV
@@ -715,7 +719,7 @@ We will use a mixture depending on the commands.
 
 - Install `adb` on the Pi Zero W
 
-  `$ sudo apt update && sudo apt install adb`
+  `$ sudo apt install adb`
 
 - Start the Fire TV and activate developer options somewhere in the settings menu
 
