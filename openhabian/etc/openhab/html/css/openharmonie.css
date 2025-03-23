@@ -1,0 +1,127 @@
+body {
+  --base-color: #0097a7;
+}
+
+body[data-theme="light"] {
+  --mix-color: #fafafa;
+  --mix-color-dark: #3a3a3a;
+  --primary-color: var(--base-color);
+  --header-bg: var(--primary-color);
+  --header-text-color: var(--mix-color);
+  --body-bg: color-mix(
+    in srgb,
+    var(--mix-color),
+    var(--primary-color) 10%
+  ); /*#dafdff;*/
+  --container-bg: #fff;
+  --container-text-color: var(--mix-color-dark);
+  --switch-off-track-bg: rgba(0, 0, 0, 0.26);
+  --switch-on-track-bg: #9fa8da;
+  --border-color: rgba(0, 0, 0, 0);/*#ccc;*/
+  --radio-unchecked-color: rgba(0, 0, 0, 0.5);
+  --input-undef-color: rgba(0, 0, 0, 0.26);
+  --input-icon-filter: invert(0%);
+  --button-color: color-mix(
+    in srgb,
+    var(--mix-color-dark),
+    var(--primary-color) 5%
+  );
+  --secondary-color: color-mix(
+    in srgb,
+    var(--mix-color-dark),
+    var(--primary-color) 30%
+  );
+  --text-color: #eee;
+  --secondary-text-color: #fff;
+  --border-radius: 5px;
+  --button-background-color: color-mix(
+    in srgb,
+    var(--mix-color),
+    var(--primary-color) 30%
+  ); /*#c8e8e9;*/
+}
+
+body[data-theme="dark"] {
+  --mix-color: #3a3a3a;
+  --mix-color-dark: #fafafa;
+  --primary-color: color-mix(in srgb, var(--mix-color), var(--base-color) 70%);
+  --header-bg: var(--primary-color);
+  --header-text-color: var(--mix-color-dark);
+  --body-bg: color-mix(in srgb, var(--mix-color), var(--primary-color) 10%);
+  --container-bg: #232323;
+  --container-text-color: var(--mix-color-dark);
+  --switch-off-track-bg: rgba(255, 255, 255, 0.26);
+  --switch-on-track-bg: #9fa8da;
+  --border-color: rgba(0, 0, 0, 0); /*#545454;*/
+  --radio-unchecked-color: rgba(255, 255, 255, 0.5);
+  --input-undef-color: rgba(158, 158, 158, 0.26);
+  --input-icon-filter: invert(100%);
+  --button-color: color-mix(
+    in srgb,
+    var(--mix-color-dark),
+    var(--primary-color) 5%
+  );
+  --secondary-color: color-mix(
+    in srgb,
+    var(--mix-color-dark),
+    var(--primary-color) 30%
+  );
+  --text-color: #eee;
+  --secondary-text-color: #fff;
+  --border-radius: 5px;
+  --button-background-color: color-mix(
+    in srgb,
+    var(--mix-color),
+    var(--primary-color) 30%
+  ); /*#c8e8e9;*/
+}
+
+DIV.mdl-form {
+  border-radius: var(--border-radius) !important;
+}
+
+.mdl-form__row--header {
+  padding-left: 8px;
+  padding-right: 0px;
+}
+
+BUTTON.mdl-button {
+  background-color: var(--button-background-color);
+  border-radius: var(--border-radius) !important;
+}
+
+BUTTON.mdl-button--accent {
+  background-color: var(--secondary-color) !important;
+  color: color-mix(
+    in srgb,
+    var(--mix-color),
+    var(--button-color) 3%
+  ) !important;
+}
+
+BUTTON.mdl-button:hover {
+  background-color: var(--button-background-color); /*var(--primary-color);*/
+  /*color: var(--text-color);*/
+}
+
+.mdl-progress.mdl-progress__indeterminate > .bar1,
+.mdl-progress.mdl-progress__indeterminate > .bar3 {
+  background-color: var(--primary-color);
+}
+
+.mdl-progress > .bufferbar {
+  background-image: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.7),
+      rgba(255, 255, 255, 0.7)
+    ),
+    linear-gradient(to right, var(--body-bg), var(--body-bg));
+}
+
+.mdl-form__row.mdl-cell--4-col {
+  width: 100%;
+}
+
+.mdl-form__row.mdl-cell--12-col {
+  width: 100%;
+}

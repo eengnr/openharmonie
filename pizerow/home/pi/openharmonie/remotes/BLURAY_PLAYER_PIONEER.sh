@@ -8,7 +8,15 @@ fi
 
 CMD=$1
 
-if [[ "$CMD" = "REMOTE_POWER" ]] || [[ "$CMD" = "REMOTE_OPENCLOSE" ]] || [[ "$CMD" = "REMOTE_HOMEMEDIAGALLERY" ]] || [[ "$CMD" = "REMOTE_KEYLOCK" ]] || [[ "$CMD" = "REMOTE_DIMMER" ]] || [[ "$CMD" = "REMOTE_EXIT" ]] || [[ "$CMD" = "REMOTE_CDSACD" ]] || [[ "$CMD" = "REMOTE_TOPMENU" ]] || [[ "$CMD" = "REMOTE_POPUPMENU" ]] || [[ "$CMD" = "REMOTE_HOMEMENU" ]] || [[ "$CMD" = "REMOTE_RETURN" ]] || [[ "$CMD" = "REMOTE_REPLAY" ]] || [[ "$CMD" = "REMOTE_TOOLS" ]] || [[ "$CMD" = "REMOTE_CONTINUED" ]] || [[ "$CMD" = "REMOTE_SKIPSEARCH" ]] || [[ "$CMD" = "REMOTE_REWIND" ]] || [[ "$CMD" = "REMOTE_PLAY" ]] || [[ "$CMD" = "REMOTE_FORWARD" ]] || [[ "$CMD" = "REMOTE_SKIPBACK" ]] || [[ "$CMD" = "REMOTE_PAUSE" ]] || [[ "$CMD" = "REMOTE_STOP" ]] || [[ "$CMD" = "REMOTE_SKIPNEXT" ]] || [[ "$CMD" = "REMOTE_AUDIO" ]] || [[ "$CMD" = "REMOTE_SUBTITLE" ]] || [[ "$CMD" = "REMOTE_ANGLE" ]] || [[ "$CMD" = "REMOTE_AB" ]] || [[ "$CMD" = "REMOTE_PROGRAM" ]] || [[ "$CMD" = "REMOTE_BOOKMARK" ]] || [[ "$CMD" = "REMOTE_ZOOM" ]] || [[ "$CMD" = "REMOTE_INDEX" ]]
+if [[ "$CMD" = "REMOTE_POWER" ]]
+    then
+        # Preflight code 0xa6a7
+        # Power multiple times
+        for i in {1..4}; do
+            ir-ctl -d /dev/lirc-tx -k /home/pi/openharmonie/remotes/toml/BLURAY_PLAYER_PIONEER.toml -K REMOTE_PREFLIGHT -K $CMD --gap 20000
+            sleep 0.125 #125000 ms, default for --gap of ir-ctl, but because of the preflight, a loop is used here
+        done
+elif [[ "$CMD" = "REMOTE_OPENCLOSE" ]] || [[ "$CMD" = "REMOTE_HOMEMEDIAGALLERY" ]] || [[ "$CMD" = "REMOTE_KEYLOCK" ]] || [[ "$CMD" = "REMOTE_DIMMER" ]] || [[ "$CMD" = "REMOTE_EXIT" ]] || [[ "$CMD" = "REMOTE_CDSACD" ]] || [[ "$CMD" = "REMOTE_TOPMENU" ]] || [[ "$CMD" = "REMOTE_POPUPMENU" ]] || [[ "$CMD" = "REMOTE_HOMEMENU" ]] || [[ "$CMD" = "REMOTE_RETURN" ]] || [[ "$CMD" = "REMOTE_REPLAY" ]] || [[ "$CMD" = "REMOTE_TOOLS" ]] || [[ "$CMD" = "REMOTE_CONTINUED" ]] || [[ "$CMD" = "REMOTE_SKIPSEARCH" ]] || [[ "$CMD" = "REMOTE_REWIND" ]] || [[ "$CMD" = "REMOTE_PLAY" ]] || [[ "$CMD" = "REMOTE_FORWARD" ]] || [[ "$CMD" = "REMOTE_SKIPBACK" ]] || [[ "$CMD" = "REMOTE_PAUSE" ]] || [[ "$CMD" = "REMOTE_STOP" ]] || [[ "$CMD" = "REMOTE_SKIPNEXT" ]] || [[ "$CMD" = "REMOTE_AUDIO" ]] || [[ "$CMD" = "REMOTE_SUBTITLE" ]] || [[ "$CMD" = "REMOTE_ANGLE" ]] || [[ "$CMD" = "REMOTE_AB" ]] || [[ "$CMD" = "REMOTE_PROGRAM" ]] || [[ "$CMD" = "REMOTE_BOOKMARK" ]] || [[ "$CMD" = "REMOTE_ZOOM" ]] || [[ "$CMD" = "REMOTE_INDEX" ]]
     then
         # Preflight code 0xa6a7
         ir-ctl -d /dev/lirc-tx -k /home/pi/openharmonie/remotes/toml/BLURAY_PLAYER_PIONEER.toml -K REMOTE_PREFLIGHT -K $CMD --gap 20000

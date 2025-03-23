@@ -21,7 +21,7 @@ const queueCommand = function (item, targetState, delay) {
   if (item && targetState) {
     const timeout = delay || pauseBetweenCommands;
     gkHARMONIE.addCommand(timeout, () => {
-      item?.sendCommand(targetState);
+      item.sendCommand(targetState);
     });
   } else {
     console.warn(`Item ${item} or targetState ${targetState} not found`);
@@ -45,16 +45,16 @@ const queuePause = function (pause) {
  */
 const startActivity = function (activity, task) {
   if (typeof task === 'function') {
-    if (items.getItem('OPENHARMONIE_Activity_Starting')?.state == activity) {
+    if (items.getItem('OPENHARMONIE_Activity_Starting').state == activity) {
       // If activity is already active, execute the task directly
       task();
     } else {
       // If activity is not active yet, add the task as onFinish phase and start the activity
       changeToActivity[getKey(activities, activity)].onFinish = task;
-      items.getItem('OPENHARMONIE_Activity_Starting')?.sendCommand(activity);
+      items.getItem('OPENHARMONIE_Activity_Starting').sendCommand(activity);
     }
   } else if (task == undefined) {
-    items.getItem('OPENHARMONIE_Activity_Starting')?.sendCommand(activity);
+    items.getItem('OPENHARMONIE_Activity_Starting').sendCommand(activity);
   } else {
     console.warn(`startActivity failed, task ${task} is not a function`);
   }
@@ -162,6 +162,56 @@ const remotes = {
       OPENHARMONIE_TV_RTL2: '2007',
       OPENHARMONIE_TV_NITRO: '2008',
       OPENHARMONIE_TV_TELE5: '2009',
+    },
+  },
+  TV_TELEFUNKEN_QU50K800_RemoteControl: {
+    device: 'TV_TELEFUNKEN_QU50K800',
+    commands: {
+      REMOTE_POWER: '0',
+      REMOTE_INPUT: '1',
+      REMOTE_1: '2',
+      REMOTE_2: '3',
+      REMOTE_3: '4',
+      REMOTE_4: '5',
+      REMOTE_5: '6',
+      REMOTE_6: '7',
+      REMOTE_7: '8',
+      REMOTE_8: '9',
+      REMOTE_9: '10',
+      REMOTE_0: '11',
+      REMOTE_LANGUAGE: '12',
+      REMOTE_TXT: '13',
+      REMOTE_VOLUMEUP: '14',
+      REMOTE_VOLUMEDOWN: '15',
+      REMOTE_MUTE: '16',
+      REMOTE_HOME: '17',
+      REMOTE_CHANNELUP: '18',
+      REMOTE_CHANNELDOWN: '19',
+      REMOTE_GUIDE: '20',
+      REMOTE_INFO: '21',
+      REMOTE_BACK: '22',
+      REMOTE_EXIT: '23',
+      REMOTE_UP: '24',
+      REMOTE_DOWN: '25',
+      REMOTE_LEFT: '26',
+      REMOTE_RIGHT: '27',
+      REMOTE_OK: '28',
+      REMOTE_NETFLIX: '29',
+      REMOTE_YOUTUBE: '30',
+      REMOTE_AMAZONVIDEO: '31',
+      REMOTE_RAKUTENTV: '32',
+      REMOTE_TWITCH: '33',
+      REMOTE_STAR1: '34',
+      REMOTE_RED: '35',
+      REMOTE_GREEN: '36',
+      REMOTE_YELLOW: '37',
+      REMOTE_BLUE: '38',
+      REMOTE_REWIND: '39',
+      REMOTE_PAUSE: '40',
+      REMOTE_FORWARD: '41',
+      REMOTE_RECORD: '42',
+      REMOTE_PLAY: '43',
+      REMOTE_STOP: '44',
     },
   },
   TV_HISENSE_EN2BF27H_RemoteControl: {
@@ -406,6 +456,7 @@ const remotes = {
 rules.JSRule({
   name: 'Remote_Control_Button_Pushed',
   triggers: [
+    triggers.ItemStateUpdateTrigger('TV_TELEFUNKEN_QU50K800_RemoteControl'),
     triggers.ItemStateUpdateTrigger('TV_HISENSE_EN2BF27H_RemoteControl'),
     triggers.ItemStateUpdateTrigger('BLURAY_PLAYER_PIONEER_RemoteControl'),
     triggers.ItemStateUpdateTrigger('RECEIVER_SAMSUNG_KD_RemoteControl'),
@@ -423,7 +474,7 @@ rules.JSRule({
     // If command was found, update MQTT item
     if (commandToSend != '' && commandToSend != undefined) {
       console.debug(`Sending ${commandToSend} to ${device}`);
-      items.getItem('Send_Harmonie_Command')?.sendCommand(`${device} ${commandToSend}`); // Format is parsed on Pi 0 W side in send_command.sh
+      items.getItem('Send_Harmonie_Command').sendCommand(`${device} ${commandToSend}`); // Format is parsed on Pi 0 W side in send_command.sh
     } else {
       console.warn('commandToSend not found');
     }
@@ -441,7 +492,7 @@ rules.JSRule({
   execute: (event) => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
-      ?.sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands[event.receivedState]);
+      .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands[event.receivedState]);
   },
 });
 
@@ -454,6 +505,7 @@ rules.JSRule({
 rules.JSRule({
   name: 'Device_Power_Pushed',
   triggers: [
+    triggers.ItemStateChangeTrigger('TV_TELEFUNKEN_QU50K800_OnOff'),
     triggers.ItemStateChangeTrigger('TV_HISENSE_EN2BF27H_OnOff'),
     triggers.ItemStateChangeTrigger('BLURAY_PLAYER_PIONEER_OnOff'),
     triggers.ItemStateChangeTrigger('RECEIVER_SAMSUNG_KD_OnOff'),
@@ -462,20 +514,25 @@ rules.JSRule({
   ],
   execute: (event) => {
     switch (event.itemName) {
+      case 'TV_TELEFUNKEN_QU50K800_OnOff':
+        items
+          .getItem('TV_TELEFUNKEN_QU50K800_RemoteControl')
+          .sendCommand(remotes['TV_TELEFUNKEN_QU50K800_RemoteControl'].commands['REMOTE_POWER']);
+        break;
       case 'TV_HISENSE_EN2BF27H_OnOff':
         items
           .getItem('TV_HISENSE_EN2BF27H_RemoteControl')
-          ?.sendCommand(remotes['TV_HISENSE_EN2BF27H_RemoteControl'].commands['REMOTE_POWER']);
+          .sendCommand(remotes['TV_HISENSE_EN2BF27H_RemoteControl'].commands['REMOTE_POWER']);
         break;
       case 'BLURAY_PLAYER_PIONEER_OnOff':
         items
           .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
-          ?.sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_POWER']);
+          .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_POWER']);
         break;
       case 'RECEIVER_SAMSUNG_KD_OnOff':
         items
           .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-          ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_POWER']);
+          .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_POWER']);
         break;
     }
   },
@@ -517,32 +574,32 @@ rules.JSRule({
     const input = event.receivedState;
     switch (event.itemName) {
       case 'HDMI_SWITCH_3_Input':
-        items.getItem('HDMI_SWITCH_3_RemoteControl')?.sendCommand(input); // Possible, because input 0 = button 0 and so on
+        items.getItem('HDMI_SWITCH_3_RemoteControl').sendCommand(input); // Possible, because input 0 = button 0 and so on
         break;
       case 'HDMI_SWITCH_5_Input':
-        items.getItem('HDMI_SWITCH_5_RemoteControl')?.sendCommand(input); // Possible, because input 0 = button 0 and so on
+        items.getItem('HDMI_SWITCH_5_RemoteControl').sendCommand(input); // Possible, because input 0 = button 0 and so on
         break;
-      case 'Bluray_Player_Input_Source':
+      case 'BLURAY_PLAYER_PIONEER_Input':
         // To change input source on Bluray player, you have to push 'Function', followed by 'Right' x times and then 'OK'
         const rightPushes = parseInt(event.receivedState);
         // Send 'Function' command and wait:
         queueCommand(
           items.getItem('BLURAY_PLAYER_PIONEER_RemoteControl'),
           remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_FUNCTION'],
-          1000
+          1000,
         );
         // Push x times 'Right' depending on the input source and wait
         for (let i = 0; i < rightPushes; i++) {
           queueCommand(
             items.getItem('BLURAY_PLAYER_PIONEER_RemoteControl'),
             remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_RIGHT'],
-            1000
+            1000,
           );
         }
         // Push 'OK'
         queueCommand(
           items.getItem('BLURAY_PLAYER_PIONEER_RemoteControl'),
-          remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_OK']
+          remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_ENTER'],
         );
       // ...
     }
@@ -578,9 +635,9 @@ const activities = {
 const changeToActivity = {
   PowerOff: {
     powerStates: () => {
-      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'OFF');
-      queueCommand(items.getItem('TV_HISENSE_EN2BF27H_OnOff'), 'OFF');
-      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'OFF');
+      queueCommand(items.getItem('TV_TELEFUNKEN_QU50K800_OnOff'), 'OFF', pauseBetweenCommands * 2);
+      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'OFF', pauseBetweenCommands * 2);
+      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'OFF', pauseBetweenCommands * 2);
     },
     inputStates: () => {},
     onEnter: () => {},
@@ -589,9 +646,9 @@ const changeToActivity = {
   },
   TV: {
     powerStates: () => {
-      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'ON');
-      queueCommand(items.getItem('TV_HISENSE_EN2BF27H_OnOff'), 'ON');
-      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'ON');
+      queueCommand(items.getItem('TV_TELEFUNKEN_QU50K800_OnOff'), 'ON', pauseBetweenCommands * 2);
+      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'ON', pauseBetweenCommands * 2);
+      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'ON', pauseBetweenCommands * 2);
     },
     inputStates: () => {
       queuePause(2000);
@@ -602,11 +659,11 @@ const changeToActivity = {
       queueCommand(items.getItem('HDMI_SWITCH_5_Input'), inputs['HDMI_SWITCH_5_Input']['HDMI2']);
     },
     onEnter: () => {
-      // Cable receiver is in sleep state until 18:30 and takes very long to start up - add a pause in this case
+      // Cable receiver is in sleep state until 18:00 and takes very long to start up - add a pause in this case
       const now = new Date();
       const hour = now.getHours();
       const minutes = now.getMinutes();
-      if (hour < 18 || (hour == 18 && minutes < 30)) {
+      if (hour < 17 || (hour == 17 && minutes < 52)) {
         queuePause(100 * 1000); // 1:40 minutes
       } else {
         queuePause(2000);
@@ -617,9 +674,9 @@ const changeToActivity = {
   },
   FireTV: {
     powerStates: () => {
-      queueCommand(items.getItem('TV_HISENSE_EN2BF27H_OnOff'), 'ON');
-      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'OFF');
-      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'ON');
+      queueCommand(items.getItem('TV_TELEFUNKEN_QU50K800_OnOff'), 'ON', pauseBetweenCommands * 2);
+      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'ON', pauseBetweenCommands * 2);
+      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'OFF', pauseBetweenCommands * 2);
     },
     inputStates: () => {
       if (previousActivity == activities['PowerOff']) {
@@ -632,20 +689,17 @@ const changeToActivity = {
       queueCommand(
         items.getItem('FIRETV_RemoteControl'),
         remotes['FIRETV_RemoteControl'].commands['REMOTE_CONNECT'],
-        4000
+        5000,
       );
       // Press menu button of FireTV
       if (previousActivity == activities['PowerOff']) {
         queuePause(2000);
       }
-      queueCommand(
-        items.getItem('FIRETV_RemoteControl'),
-        remotes['FIRETV_RemoteControl'].commands['KEY_HOMEPAGE'],
-        1000
-      );
-      // Workaround for input keyevent
-      queueCommand(items.getItem('FIRETV_RemoteControl'), remotes['FIRETV_RemoteControl'].commands['KEY_BACK'], 1000);
       queueCommand(items.getItem('FIRETV_RemoteControl'), remotes['FIRETV_RemoteControl'].commands['KEY_HOMEPAGE']);
+      // Workaround for input keyevent
+      queueCommand(items.getItem('FIRETV_RemoteControl'), remotes['FIRETV_RemoteControl'].commands['KEY_BACK']);
+      queueCommand(items.getItem('FIRETV_RemoteControl'), remotes['FIRETV_RemoteControl'].commands['KEY_HOMEPAGE']);
+      queuePause(5500);
     },
     onFinish: () => {},
     onExit: () => {
@@ -653,20 +707,20 @@ const changeToActivity = {
       queueCommand(
         items.getItem('FIRETV_RemoteControl'),
         remotes['FIRETV_RemoteControl'].commands['KEY_HOMEPAGE'],
-        1000
+        3000,
       );
       // Disconnect ADB
       queueCommand(
         items.getItem('FIRETV_RemoteControl'),
-        remotes['FIRETV_RemoteControl'].commands['REMOTE_DISCONNECT']
+        remotes['FIRETV_RemoteControl'].commands['REMOTE_DISCONNECT'],
       );
     },
   },
   Chromecast: {
     powerStates: () => {
-      queueCommand(items.getItem('TV_HISENSE_EN2BF27H_OnOff'), 'ON');
-      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'OFF');
-      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'ON');
+      queueCommand(items.getItem('TV_TELEFUNKEN_QU50K800_OnOff'), 'ON', pauseBetweenCommands * 2);
+      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'ON', pauseBetweenCommands * 2);
+      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'OFF', pauseBetweenCommands * 2);
     },
     inputStates: () => {
       if (previousActivity == activities['PowerOff']) {
@@ -681,15 +735,15 @@ const changeToActivity = {
   },
   Film: {
     powerStates: () => {
-      queueCommand(items.getItem('TV_HISENSE_EN2BF27H_OnOff'), 'ON');
-      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'OFF');
-      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'ON');
+      queueCommand(items.getItem('TV_TELEFUNKEN_QU50K800_OnOff'), 'ON', pauseBetweenCommands * 2);
+      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'ON', pauseBetweenCommands * 2);
+      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'OFF', pauseBetweenCommands * 2);
     },
     inputStates: () => {},
     onEnter: () => {
       queueCommand(
         items.getItem('BLURAY_PLAYER_PIONEER_RemoteControl'),
-        remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_HOMEMENU']
+        remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_HOMEMENU'],
       );
     },
     onFinish: () => {},
@@ -698,14 +752,14 @@ const changeToActivity = {
       // TODO Refactor call; we don't need a queueCommand here, because the input change internally queues commands
       // Queue in queue leads to wrong order, commands are at the end of queue instead of the middle
       // But it would be better if the onExit consists of queueCommand/queuePause calls
-      items.getItem('BLURAY_PLAYER_PIONEER_Input')?.sendCommand(inputs['BLURAY_PLAYER_PIONEER_Input']['HDMI1']);
+      items.getItem('BLURAY_PLAYER_PIONEER_Input').sendCommand(inputs['BLURAY_PLAYER_PIONEER_Input']['HDMI1']);
     },
   },
   Wii: {
     powerStates: () => {
-      queueCommand(items.getItem('TV_HISENSE_EN2BF27H_OnOff'), 'ON');
-      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'OFF');
-      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'ON');
+      queueCommand(items.getItem('TV_TELEFUNKEN_QU50K800_OnOff'), 'ON', pauseBetweenCommands * 2);
+      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'ON', pauseBetweenCommands * 2);
+      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'OFF', pauseBetweenCommands * 2);
     },
     inputStates: () => {
       if (previousActivity == activities['PowerOff']) {
@@ -719,9 +773,9 @@ const changeToActivity = {
   },
   HDMI: {
     powerStates: () => {
-      queueCommand(items.getItem('TV_HISENSE_EN2BF27H_OnOff'), 'ON');
-      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'OFF');
-      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'ON');
+      queueCommand(items.getItem('TV_TELEFUNKEN_QU50K800_OnOff'), 'ON', pauseBetweenCommands * 2);
+      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'ON', pauseBetweenCommands * 2);
+      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'OFF', pauseBetweenCommands * 2);
     },
     inputStates: () => {
       if (previousActivity == activities['PowerOff']) {
@@ -756,243 +810,237 @@ const activityCommands = {
     OPENHARMONIE_GUIDE: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_PROGRAMM']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_PROGRAMM']);
     },
     OPENHARMONIE_OPTIONS: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_OPT']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_OPT']);
     },
     OPENHARMONIE_BACK: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_BACK']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_BACK']);
     },
     OPENHARMONIE_EXIT: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_EXIT']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_EXIT']);
     },
     OPENHARMONIE_INFO: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_INFO']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_INFO']);
     },
     OPENHARMONIE_SMARTTV: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_SUCHE']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_SUCHE']);
     },
     // Button on physical remote
     OPENHARMONIE_LIST: () => {
       items
         .getItem('OPENHARMONIE_RemoteControl')
-        ?.sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_RECORDINGS']);
+        .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_RECORDINGS']);
     },
     // Button in sitemap
     OPENHARMONIE_RECORDINGS: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_AUFNAHMEN']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_AUFNAHMEN']);
     },
     OPENHARMONIE_REWIND: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_REWIND']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_REWIND']);
     },
     OPENHARMONIE_PAUSEPLAY: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_PAUSEPLAY']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_PAUSEPLAY']);
     },
     OPENHARMONIE_PAUSE: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_PAUSEPLAY']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_PAUSEPLAY']);
     },
     OPENHARMONIE_FORWARD: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_FORWARD']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_FORWARD']);
     },
     OPENHARMONIE_STOP: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_STOP']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_STOP']);
     },
     OPENHARMONIE_RECORD: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_REC']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_REC']);
     },
     OPENHARMONIE_UP: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_UP']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_UP']);
     },
     OPENHARMONIE_DOWN: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_DOWN']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_DOWN']);
     },
     OPENHARMONIE_LEFT: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_LEFT']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_LEFT']);
     },
     OPENHARMONIE_RIGHT: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_RIGHT']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_RIGHT']);
     },
     OPENHARMONIE_OK: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_OK']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_OK']);
     },
     OPENHARMONIE_0: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_0']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_0']);
     },
     OPENHARMONIE_1: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_1']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_1']);
     },
     OPENHARMONIE_2: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_2']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_2']);
     },
     OPENHARMONIE_3: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_3']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_3']);
     },
     OPENHARMONIE_4: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_4']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_4']);
     },
     OPENHARMONIE_5: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_5']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_5']);
     },
     OPENHARMONIE_6: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_6']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_6']);
     },
     OPENHARMONIE_7: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_7']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_7']);
     },
     OPENHARMONIE_8: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_8']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_8']);
     },
     OPENHARMONIE_9: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_9']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_9']);
     },
     OPENHARMONIE_CHANNELUP: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_CHANNELUP']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_CHANNELUP']);
     },
     OPENHARMONIE_CHANNELDOWN: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_CHANNELDOWN']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_CHANNELDOWN']);
     },
     OPENHARMONIE_HOME: () => {
       items
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-        ?.sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_MENU']);
+        .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_MENU']);
     },
   },
   FireTV: {
     OPENHARMONIE_UP: () => {
-      items.getItem('FIRETV_RemoteControl')?.sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_UP']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_UP']);
     },
     OPENHARMONIE_DOWN: () => {
-      items.getItem('FIRETV_RemoteControl')?.sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_DOWN']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_DOWN']);
     },
     OPENHARMONIE_LEFT: () => {
-      items.getItem('FIRETV_RemoteControl')?.sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_LEFT']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_LEFT']);
     },
     OPENHARMONIE_RIGHT: () => {
-      items.getItem('FIRETV_RemoteControl')?.sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_RIGHT']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_RIGHT']);
     },
     OPENHARMONIE_OK: () => {
-      items.getItem('FIRETV_RemoteControl')?.sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_KPENTER']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_KPENTER']);
     },
     OPENHARMONIE_HOME: () => {
-      items.getItem('FIRETV_RemoteControl')?.sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_HOMEPAGE']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_HOMEPAGE']);
     },
     OPENHARMONIE_PAUSEPLAY: () => {
-      items.getItem('FIRETV_RemoteControl')?.sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_PLAYPAUSE']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_PLAYPAUSE']);
     },
     OPENHARMONIE_PAUSE: () => {
-      items.getItem('FIRETV_RemoteControl')?.sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_PLAYPAUSE']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_PLAYPAUSE']);
     },
     OPENHARMONIE_BACK: () => {
-      items.getItem('FIRETV_RemoteControl')?.sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_BACK']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_BACK']);
     },
     OPENHARMONIE_FORWARD: () => {
-      items.getItem('FIRETV_RemoteControl')?.sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_FASTFORWARD']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_FASTFORWARD']);
     },
     OPENHARMONIE_REWIND: () => {
-      items.getItem('FIRETV_RemoteControl')?.sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_REWIND']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_REWIND']);
     },
     OPENHARMONIE_CHANNELUP: () => {
-      items.getItem('FIRETV_RemoteControl')?.sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_CHANNELUP']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_CHANNELUP']);
     },
     OPENHARMONIE_CHANNELDOWN: () => {
-      items.getItem('FIRETV_RemoteControl')?.sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_CHANNELDOWN']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_CHANNELDOWN']);
     },
     OPENHARMONIE_1: () => {
-      items.getItem('FIRETV_RemoteControl')?.sendCommand(remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_ARD']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_ARD']);
     },
     OPENHARMONIE_2: () => {
-      items.getItem('FIRETV_RemoteControl')?.sendCommand(remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_ZDF']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_ZDF']);
     },
     OPENHARMONIE_3: () => {
-      items
-        .getItem('FIRETV_RemoteControl')
-        ?.sendCommand(remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_RTLPLUS']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_RTLPLUS']);
     },
     OPENHARMONIE_4: () => {
-      items.getItem('FIRETV_RemoteControl')?.sendCommand(remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_JOYN']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_JOYN']);
     },
     OPENHARMONIE_5: () => {
-      items
-        .getItem('FIRETV_RemoteControl')
-        ?.sendCommand(remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_NETFLIX']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_NETFLIX']);
     },
     OPENHARMONIE_6: () => {
-      items.getItem('FIRETV_RemoteControl')?.sendCommand(remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_DISNEY']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_DISNEY']);
     },
     OPENHARMONIE_7: () => {
       items
         .getItem('FIRETV_RemoteControl')
-        ?.sendCommand(remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_AMAZONVIDEO']);
+        .sendCommand(remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_AMAZONVIDEO']);
     },
     OPENHARMONIE_8: () => {
-      items
-        .getItem('FIRETV_RemoteControl')
-        ?.sendCommand(remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_NEWPIPE']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_NEWPIPE']);
     },
     OPENHARMONIE_SMARTTV: () => {
-      items.getItem('FIRETV_RemoteControl')?.sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_SEARCH']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_SEARCH']);
     },
     OPENHARMONIE_OPTIONS: () => {
-      items.getItem('FIRETV_RemoteControl')?.sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_MENU']);
+      items.getItem('FIRETV_RemoteControl').sendCommand(remotes['FIRETV_RemoteControl'].commands['KEY_MENU']);
     },
   },
   Chromecast: {},
@@ -1000,89 +1048,104 @@ const activityCommands = {
     OPENHARMONIE_UP: () => {
       items
         .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
-        ?.sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_UP']);
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_UP']);
     },
     OPENHARMONIE_DOWN: () => {
       items
         .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
-        ?.sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_DOWN']);
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_DOWN']);
     },
     OPENHARMONIE_LEFT: () => {
       items
         .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
-        ?.sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_LEFT']);
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_LEFT']);
     },
     OPENHARMONIE_RIGHT: () => {
       items
         .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
-        ?.sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_RIGHT']);
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_RIGHT']);
     },
     OPENHARMONIE_OK: () => {
       items
         .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
-        ?.sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_ENTER']);
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_ENTER']);
     },
     OPENHARMONIE_HOME: () => {
       items
         .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
-        ?.sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_HOMEMENU']);
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_HOMEMENU']);
     },
     OPENHARMONIE_BACK: () => {
       items
         .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
-        ?.sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_RETURN']);
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_RETURN']);
     },
     OPENHARMONIE_PAUSEPLAY: () => {
       items
         .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
-        ?.sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_PLAY']);
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_PLAY']);
     },
     OPENHARMONIE_PAUSE: () => {
       items
         .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
-        ?.sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_PAUSE']);
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_PAUSE']);
+    },
+    OPENHARMONIE_STOP: () => {
+      items
+        .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_STOP']);
+    },
+    OPENHARMONIE_REWIND: () => {
+      items
+        .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_REWIND']);
+    },
+    OPENHARMONIE_FORWARD: () => {
+      items
+        .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_FORWARD']);
     },
     OPENHARMONIE_SKIPNEXT: () => {
       items
         .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
-        ?.sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_SKIPNEXT']);
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_SKIPNEXT']);
     },
     OPENHARMONIE_SKIPBACK: () => {
       items
         .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
-        ?.sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_SKIPBACK']);
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_SKIPBACK']);
     },
     // Virtual
     OPENHARMONIE_OPENCLOSE: () => {
       items
         .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
-        ?.sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_OPENCLOSE']);
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_OPENCLOSE']);
     },
     OPENHARMONIE_TOPMENU: () => {
       items
         .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
-        ?.sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_TOPMENU']);
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_TOPMENU']);
     },
     OPENHARMONIE_POPUPMENU: () => {
       items
         .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
-        ?.sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_POPUPMENU']);
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_POPUPMENU']);
     },
     // Physical
-    OPENHARMONIE_GUIDE: () => {
+    OPENHARMONIE_FORMAT: () => {
       items
         .getItem('OPENHARMONIE_RemoteControl')
-        ?.sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_OPENCLOSE']);
+        .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_OPENCLOSE']);
     },
     OPENHARMONIE_LIST: () => {
       items
         .getItem('OPENHARMONIE_RemoteControl')
-        ?.sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_TOPMENU']);
+        .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_TOPMENU']);
     },
     OPENHARMONIE_OPTIONS: () => {
       items
         .getItem('OPENHARMONIE_RemoteControl')
-        ?.sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_POPUPMENU']);
+        .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_POPUPMENU']);
     },
   },
   Wii: {},
@@ -1113,23 +1176,23 @@ const activityCommands = {
       // Could also be used to e.g. change the volume of an Echo device with the Echo Binding
       items
         .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
-        ?.sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_VOLUMEUP']);
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_VOLUMEUP']);
     },
     OPENHARMONIE_VOLUMEDOWN: () => {
       items
         .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
-        ?.sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_VOLUMEDOWN']);
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_VOLUMEDOWN']);
     },
     OPENHARMONIE_MUTE: () => {
       items
         .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
-        ?.sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_MUTE']);
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_MUTE']);
     },
     OPENHARMONIE_TV_ARD: () => {
       startActivity(activities['TV'], () => {
         queueCommand(
           items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
-          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_1']
+          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_1'],
         );
       });
     },
@@ -1137,7 +1200,7 @@ const activityCommands = {
       startActivity(activities['TV'], () => {
         queueCommand(
           items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
-          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_2']
+          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_2'],
         );
       });
     },
@@ -1145,11 +1208,11 @@ const activityCommands = {
       startActivity(activities['TV'], () => {
         queueCommand(
           items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
-          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_2']
+          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_3'],
         );
         queueCommand(
           items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
-          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_8']
+          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_0'],
         );
       });
     },
@@ -1157,7 +1220,7 @@ const activityCommands = {
       startActivity(activities['TV'], () => {
         queueCommand(
           items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
-          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_3']
+          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_3'],
         );
       });
     },
@@ -1165,7 +1228,7 @@ const activityCommands = {
       startActivity(activities['TV'], () => {
         queueCommand(
           items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
-          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_4']
+          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_4'],
         );
       });
     },
@@ -1173,7 +1236,7 @@ const activityCommands = {
       startActivity(activities['TV'], () => {
         queueCommand(
           items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
-          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_5']
+          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_5'],
         );
       });
     },
@@ -1181,7 +1244,7 @@ const activityCommands = {
       startActivity(activities['TV'], () => {
         queueCommand(
           items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
-          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_6']
+          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_6'],
         );
       });
     },
@@ -1189,7 +1252,7 @@ const activityCommands = {
       startActivity(activities['TV'], () => {
         queueCommand(
           items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
-          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_7']
+          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_7'],
         );
       });
     },
@@ -1197,11 +1260,11 @@ const activityCommands = {
       startActivity(activities['TV'], () => {
         queueCommand(
           items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
-          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_1']
+          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_1'],
         );
         queueCommand(
           items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
-          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_4']
+          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_4'],
         );
       });
     },
@@ -1209,11 +1272,11 @@ const activityCommands = {
       startActivity(activities['TV'], () => {
         queueCommand(
           items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
-          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_1']
+          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_1'],
         );
         queueCommand(
           items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
-          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_8']
+          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_8'],
         );
       });
     },
@@ -1221,7 +1284,7 @@ const activityCommands = {
       startActivity(activities['FireTV'], () => {
         queueCommand(
           items.getItem('FIRETV_RemoteControl'),
-          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_NETFLIX']
+          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_NETFLIX'],
         );
       });
     },
@@ -1229,7 +1292,7 @@ const activityCommands = {
       startActivity(activities['FireTV'], () => {
         queueCommand(
           items.getItem('FIRETV_RemoteControl'),
-          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_DISNEY']
+          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_DISNEY'],
         );
       });
     },
@@ -1237,7 +1300,7 @@ const activityCommands = {
       startActivity(activities['FireTV'], () => {
         queueCommand(
           items.getItem('FIRETV_RemoteControl'),
-          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_RTLPLUS']
+          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_RTLPLUS'],
         );
       });
     },
@@ -1245,7 +1308,7 @@ const activityCommands = {
       startActivity(activities['FireTV'], () => {
         queueCommand(
           items.getItem('FIRETV_RemoteControl'),
-          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_JOYN']
+          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_JOYN'],
         );
       });
     },
@@ -1263,7 +1326,7 @@ const activityCommands = {
       startActivity(activities['FireTV'], () => {
         queueCommand(
           items.getItem('FIRETV_RemoteControl'),
-          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_NEWPIPE']
+          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_NEWPIPE'],
         );
       });
     },
@@ -1271,7 +1334,7 @@ const activityCommands = {
       startActivity(activities['FireTV'], () => {
         queueCommand(
           items.getItem('FIRETV_RemoteControl'),
-          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_YOUTUBE']
+          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_YOUTUBE'],
         );
       });
     },
@@ -1279,7 +1342,7 @@ const activityCommands = {
       startActivity(activities['FireTV'], () => {
         queueCommand(
           items.getItem('FIRETV_RemoteControl'),
-          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_AMAZONVIDEO']
+          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_AMAZONVIDEO'],
         );
       });
     },
@@ -1287,7 +1350,7 @@ const activityCommands = {
       startActivity(activities['FireTV'], () => {
         queueCommand(
           items.getItem('FIRETV_RemoteControl'),
-          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_AMAZONMUSIC']
+          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_AMAZONMUSIC'],
         );
       });
     },
@@ -1295,7 +1358,7 @@ const activityCommands = {
       startActivity(activities['FireTV'], () => {
         queueCommand(
           items.getItem('FIRETV_RemoteControl'),
-          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_APPLETV']
+          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_APPLETV'],
         );
       });
     },
@@ -1303,7 +1366,7 @@ const activityCommands = {
       startActivity(activities['FireTV'], () => {
         queueCommand(
           items.getItem('FIRETV_RemoteControl'),
-          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_ARTE']
+          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_ARTE'],
         );
       });
     },
@@ -1311,7 +1374,7 @@ const activityCommands = {
       startActivity(activities['FireTV'], () => {
         queueCommand(
           items.getItem('FIRETV_RemoteControl'),
-          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_FREEVEE']
+          remotes['FIRETV_RemoteControl'].commands['REMOTE_APP_FREEVEE'],
         );
       });
     },
@@ -1322,12 +1385,12 @@ const activityCommands = {
         queueCommand(
           items.getItem('FIRETV_RemoteControl'),
           remotes['FIRETV_RemoteControl'].commands['KEY_HOMEPAGE'],
-          3000
+          3000,
         );
         queueCommand(
           items.getItem('FIRETV_RemoteControl'),
           remotes['FIRETV_RemoteControl'].commands['KEY_RIGHT'],
-          1500
+          1500,
         );
         queueCommand(items.getItem('FIRETV_RemoteControl'), remotes['FIRETV_RemoteControl'].commands['KEY_DOWN'], 1500);
         queueCommand(items.getItem('FIRETV_RemoteControl'), remotes['FIRETV_RemoteControl'].commands['KEY_KPENTER']);
@@ -1353,7 +1416,7 @@ rules.JSRule({
       const command = getKey(remotes['OPENHARMONIE_RemoteControl'].commands, event.receivedState);
       const currentActivity = getKey(
         activities,
-        Math.floor(items.getItem('OPENHARMONIE_Activity_Started')?.numericState || 0).toString()
+        Math.floor(items.getItem('OPENHARMONIE_Activity_Started').numericState ?? 0).toString(),
       ); // Workaround if value is e.g. 0.0 after openHAB restart
       if (activityCommands[currentActivity]?.[command]) {
         activityCommands[currentActivity][command]();
@@ -1384,14 +1447,14 @@ rules.JSRule({
       // TODO: check if this is necessary or if it is better to cancel all queued commands and just restart
       console.info(`Activity ${getKey(activities, activityStarting)} is already starting, no change possible...`);
       // Reset the starting item to the currently starting activity
-      items.getItem('OPENHARMONIE_Activity_Starting')?.sendCommand(activityStarting);
+      items.getItem('OPENHARMONIE_Activity_Starting').sendCommand(activityStarting);
     } else {
       // Start activity and persist previous activity
       gkHARMONIE.addCommand(pauseBetweenCommands, () => {
         console.info(`Starting ${getKey(activities, newActivity)}...`);
         // Persist current activity as previous activity and start the change
         activityStarting = newActivity;
-        previousActivity = Math.floor(items.getItem('OPENHARMONIE_Activity_Started')?.numericState || 0).toString(); // Workaround if value is e.g. 0.0 after openHAB restart
+        previousActivity = Math.floor(items.getItem('OPENHARMONIE_Activity_Started').numericState ?? 0).toString(); // Workaround if value is e.g. 0.0 after openHAB restart
       });
       // PHASE 0
       // Execute exit commands of previous activity with info about new activity
@@ -1410,7 +1473,7 @@ rules.JSRule({
       }
       // Update item for started activity (= current activity)
       gkHARMONIE.addCommand(0, () => {
-        items.getItem('OPENHARMONIE_Activity_Started')?.sendCommand(newActivity);
+        items.getItem('OPENHARMONIE_Activity_Started').sendCommand(newActivity);
       });
       // PHASE 3
       // Execute additional commands for new activity with info about previous activity
@@ -1437,6 +1500,7 @@ rules.JSRule({
 
 /**
  * Voice command actions
+ * Single button presses are sent directly, multiple button presses are queued
  */
 const voiceCommands = {
   openHARMONIE_AVC_Activity_TV: () => {
@@ -1460,77 +1524,101 @@ const voiceCommands = {
   openHARMONIE_AVC_Button_Pause: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
-      ?.sendCommand(remotes['OPENHARMONIE_RemoteControl']?.commands['OPENHARMONIE_PAUSE']);
+      .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_PAUSE']);
   },
   openHARMONIE_AVC_Button_Play: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
-      ?.sendCommand(remotes['OPENHARMONIE_RemoteControl']?.commands['OPENHARMONIE_PAUSEPLAY']);
+      .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_PAUSEPLAY']);
   },
   openHARMONIE_AVC_Button_VolUp: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
-      ?.sendCommand(remotes['OPENHARMONIE_RemoteControl']?.commands['OPENHARMONIE_VOLUMEUP']);
+      .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_VOLUMEUP']);
   },
   openHARMONIE_AVC_Button_VolDown: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
-      ?.sendCommand(remotes['OPENHARMONIE_RemoteControl']?.commands['OPENHARMONIE_VOLUMEDOWN']);
+      .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_VOLUMEDOWN']);
+  },
+  openHARMONIE_AVC_Button_Power_TV: () => {
+    queueCommand(
+      items.getItem('TV_TELEFUNKEN_QU50K800_RemoteControl'),
+      remotes['TV_TELEFUNKEN_QU50K800_RemoteControl'].commands['REMOTE_POWER'],
+      5000,
+    );
+    // Correct input states, because Chromecast will boot up with TV
+    voiceCommands['openHARMONIE_AVC_Button_Input']();
+  },
+  openHARMONIE_AVC_Button_Power_Bluray: () => {
+    items
+      .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
+      .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_POWER']);
+  },
+  openHARMONIE_AVC_Button_Power_Receiver: () => {
+    items
+      .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
+      .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_POWER']);
+  },
+  openHARMONIE_AVC_Button_Input: () => {
+    const currentActivity = getKey(activities, items.getItem('OPENHARMONIE_Activity_Started').state);
+    // queues:
+    changeToActivity[currentActivity].inputStates();
   },
   openHARMONIE_AVC_Favorite_DasErste: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
-      ?.sendCommand(remotes['OPENHARMONIE_RemoteControl']?.commands['OPENHARMONIE_TV_ARD']);
+      .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_TV_ARD']);
   },
   openHARMONIE_AVC_Favorite_ZDF: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
-      ?.sendCommand(remotes['OPENHARMONIE_RemoteControl']?.commands['OPENHARMONIE_TV_ZDF']);
+      .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_TV_ZDF']);
   },
   openHARMONIE_AVC_Favorite_BR: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
-      ?.sendCommand(remotes['OPENHARMONIE_RemoteControl']?.commands['OPENHARMONIE_TV_BR']);
+      .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_TV_BR']);
   },
   openHARMONIE_AVC_Favorite_RTL: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
-      ?.sendCommand(remotes['OPENHARMONIE_RemoteControl']?.commands['OPENHARMONIE_TV_RTL']);
+      .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_TV_RTL']);
   },
   openHARMONIE_AVC_Favorite_Sat1: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
-      ?.sendCommand(remotes['OPENHARMONIE_RemoteControl']?.commands['OPENHARMONIE_TV_SAT1']);
+      .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_TV_SAT1']);
   },
   openHARMONIE_AVC_Favorite_ProSieben: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
-      ?.sendCommand(remotes['OPENHARMONIE_RemoteControl']?.commands['OPENHARMONIE_TV_PRO7']);
+      .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_TV_PRO7']);
   },
   openHARMONIE_AVC_Favorite_RTLPlus: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
-      ?.sendCommand(remotes['OPENHARMONIE_RemoteControl']?.commands['OPENHARMONIE_APP_RTLPLUS']);
+      .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_APP_RTLPLUS']);
   },
   openHARMONIE_AVC_Favorite_Netflix: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
-      ?.sendCommand(remotes['OPENHARMONIE_RemoteControl']?.commands['OPENHARMONIE_APP_NETFLIX']);
+      .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_APP_NETFLIX']);
   },
   openHARMONIE_AVC_Favorite_Disney: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
-      ?.sendCommand(remotes['OPENHARMONIE_RemoteControl']?.commands['OPENHARMONIE_APP_DISNEY']);
+      .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_APP_DISNEY']);
   },
   openHARMONIE_AVC_Favorite_Joyn: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
-      ?.sendCommand(remotes['OPENHARMONIE_RemoteControl']?.commands['OPENHARMONIE_APP_JOYN']);
+      .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_APP_JOYN']);
   },
   openHARMONIE_AVC_Favorite_AmazonVideo: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
-      ?.sendCommand(remotes['OPENHARMONIE_RemoteControl']?.commands['OPENHARMONIE_APP_AMAZONVIDEO']);
+      .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_APP_AMAZONVIDEO']);
   },
 };
 
@@ -1550,9 +1638,9 @@ rules.JSRule({
     }
     if (
       event.receivedState == 'OFF' &&
-      items.getItem('OPENHARMONIE_Activity_Starting')?.state != activities['PowerOff']
+      items.getItem('OPENHARMONIE_Activity_Starting').state != activities['PowerOff']
     ) {
-      items.getItem('OPENHARMONIE_Activity_Starting')?.sendCommand(activities['PowerOff']);
+      items.getItem('OPENHARMONIE_Activity_Starting').sendCommand(activities['PowerOff']);
     }
   },
 });

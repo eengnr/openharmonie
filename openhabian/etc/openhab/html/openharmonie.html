@@ -1,0 +1,35 @@
+<head>
+  <style></style>
+</head>
+
+<body>
+  <script type="text/javascript">
+    function addStyleSheet(filename) {
+      const head = window.parent.document.head,
+        link = window.parent.document.createElement("link");
+
+      link.type = "text/css";
+      link.rel = "stylesheet";
+      link.href = filename;
+      link.id = "openharmoniestyle";
+
+      const styleAlreadyAdded =
+        window.parent.document.getElementById("openharmoniestyle");
+      if (!styleAlreadyAdded) head.appendChild(link);
+    }
+    addStyleSheet("../static/css/openharmonie.css");
+
+    // Remove Webview in Basic UI, even if it is always invisible
+    const ohIframe = window.parent.document.body.querySelector(
+      'iframe[src*="openharmonie"]'
+    );
+    const ohIframeParent = ohIframe?.closest(
+      'div[data-control-type="webview"]'
+    );
+    const ohIframeGrandParent = ohIframeParent?.closest(
+      ".mdl-form__row.mdl-form__row--height-auto.mdl-cell.mdl-cell--12-col"
+    );
+    if (ohIframeGrandParent) ohIframeGrandParent.remove();
+  </script>
+  test
+</body>

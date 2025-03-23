@@ -10,26 +10,26 @@ String Receive_Harmonie_Command "Receive Harmonie Command" <text> (openHARMONIE_
 
 // Items for activities
 
-Number OPENHARMONIE_Activity_Starting "openHARMONIE Activity starting" <mediacontrol> (openHARMONIE_Group) ["Status"] {
+Number OPENHARMONIE_Activity_Starting "openHARMONIE Aktivität starten" <mediacontrol> (openHARMONIE_Group) ["Status"] {
 	stateDescription=""[
-		options="0=PowerOff,
+		options="0=AUS,
 			1=TV,
-			2=FireTV,
-			3=Chromecast,
-			4=Film,
-			5=Wii,
+			2=FIRE TV,
+			3=CHROMECAST,
+			4=FILM,
+			5=WII,
 			6=HDMI"
 	]
 }
 
-Number OPENHARMONIE_Activity_Started "openHARMONIE Activity started" <mediacontrol> (openHARMONIE_Group) ["Status"] {
+Number OPENHARMONIE_Activity_Started "openHARMONIE Aktivität gestartet" <mediacontrol> (openHARMONIE_Group) ["Status"] {
 	stateDescription=""[
-		options="0=PowerOff,
+		options="0=AUS,
 			1=TV,
-			2=FireTV,
-			3=Chromecast,
-			4=Film,
-			5=Wii,
+			2=FIRE TV,
+			3=CHROMECAST,
+			4=FILM,
+			5=WII,
 			6=HDMI"
 	]
 }
@@ -127,6 +127,56 @@ Number OPENHARMONIE_RemoteControl "openHARMONIE Fernbedienung" <mediacontrol> (o
 			2008=OPENHARMONIE_TV_NITRO,
 			2009=OPENHARMONIE_TV_TELE5"
 			// Hardware buttons from 0-41, virtual buttons from 42 on
+	]
+}
+
+Number TV_TELEFUNKEN_QU50K800_RemoteControl "Fernseher Fernbedienung" <mediacontrol> (openHARMONIE_RemoteControl_Fernseher_Group) ["RemoteControl"] {
+	stateDescription=""[
+		options="0=REMOTE_POWER,
+			1=REMOTE_INPUT,
+			2=REMOTE_1,
+			3=REMOTE_2,
+			4=REMOTE_3,
+			5=REMOTE_4,
+			6=REMOTE_5,
+			7=REMOTE_6,
+			8=REMOTE_7,
+			9=REMOTE_8,
+			10=REMOTE_9,
+			11=REMOTE_0,
+			12=REMOTE_LANGUAGE,
+			13=REMOTE_TXT,
+			14=REMOTE_VOLUMEUP,
+			15=REMOTE_VOLUMEDOWN,
+			16=REMOTE_MUTE,
+			17=REMOTE_HOME,
+			18=REMOTE_CHANNELUP,
+			19=REMOTE_CHANNELDOWN,
+			20=REMOTE_GUIDE,
+			21=REMOTE_INFO,
+			22=REMOTE_BACK,
+			23=REMOTE_EXIT,
+			24=REMOTE_UP,
+			25=REMOTE_DOWN,
+			26=REMOTE_LEFT,
+			27=REMOTE_RIGHT,
+			28=REMOTE_OK,
+			29=REMOTE_NETFLIX,
+			30=REMOTE_YOUTUBE,
+			31=REMOTE_AMAZONVIDEO,
+			32=REMOTE_RAKUTENTV,
+			33=REMOTE_TWITCH,
+			34=REMOTE_STAR1,
+			35=REMOTE_RED,
+			36=REMOTE_GREEN,
+			37=REMOTE_YELLOW,
+			38=REMOTE_BLUE,
+			39=REMOTE_REWIND,
+			40=REMOTE_PAUSE,
+			41=REMOTE_FORWARD,
+			42=REMOTE_RECORD,
+			43=REMOTE_PLAY,
+			44=REMOTE_STOP"
 	]
 }
 
@@ -339,7 +389,7 @@ Number FIRETV_RemoteControl "FireTV Fernbedienung" <mediacontrol> (openHARMONIE_
 			2001=REMOTE_DISCONNECT"
 	]
 }
- 
+
 Number HDMI_SWITCH_3_RemoteControl "HDMI Switch 3 Fernbedienung" <mediacontrol> (openHARMONIE_RemoteControl_HDMISwitch3_Group) ["RemoteControl"] {
 	stateDescription=""[
 		options="0=REMOTE_1,
@@ -363,11 +413,19 @@ Number HDMI_SWITCH_5_RemoteControl "HDMI Switch 5 Fernbedienung" <mediacontrol> 
 
 // Items for power states
 
+Switch TV_TELEFUNKEN_QU50K800_OnOff "Fernseher Schalter" <switch> (Fernseher) ["Switch"]
 Switch TV_HISENSE_EN2BF27H_OnOff "Fernseher Schalter" <switch> (Fernseher) ["Switch"]
 Switch BLURAY_PLAYER_PIONEER_OnOff "Bluray Player Schalter" <switch> (BlurayPlayer) ["Switch"]
 Switch RECEIVER_SAMSUNG_KD_OnOff "Receiver Schalter" <switch> (Receiver) ["Switch"]
 
 // Items for input states
+
+Number TV_TELEFUNKEN_QU50K800_Input "Fernseher Input" <mediacontrol> (Fernseher) ["Status"] {
+	stateDescription=""[
+		options="0=HDMI_1,
+			1=HDMI_2"
+	]
+}
 
 Number TV_HISENSE_EN2BF27H_Input "Fernseher Input" <mediacontrol> (Fernseher) ["Status"] {
 	stateDescription=""[
@@ -421,6 +479,10 @@ Switch openHARMONIE_AVC_Button_Pause "openHARMONIE-Pause" (openHARMONIE_AVC_Grou
 Switch openHARMONIE_AVC_Button_Play "openHARMONIE-Wiedergabe" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
 Switch openHARMONIE_AVC_Button_VolUp "openHARMONIE-Lauter" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
 Switch openHARMONIE_AVC_Button_VolDown "openHARMONIE-Leiser" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Button_Power_TV "openHARMONIE-Power-TV" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Button_Power_Bluray "openHARMONIE-Power-Bluray" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Button_Power_Receiver "openHARMONIE-Power-Receiver" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Switch openHARMONIE_AVC_Button_Input "openHARMONIE-Input" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
 Switch openHARMONIE_AVC_Favorite_DasErste "Das Erste" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
 Switch openHARMONIE_AVC_Favorite_ZDF "ZDF" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
 Switch openHARMONIE_AVC_Favorite_BR "BR" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
