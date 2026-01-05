@@ -1,4 +1,4 @@
-const { rules, triggers, items, actions, time } = require('openhab');
+const { rules, triggers, items } = require('openhab');
 const { Gatekeeper } = require('openhab_rules_tools');
 
 // Global and helper stuff
@@ -17,10 +17,10 @@ let previousActivity = undefined; // Holds the previous activity
  * @param {string} targetState The target state
  * @param {number} [delay] The delay in ms to wait until the next command is executed
  */
-const queueCommand = function (item, targetState, delay) {
+const queueCommand = function (item, targetState, delay = pauseBetweenCommands) {
   if (item && targetState) {
-    const timeout = delay || pauseBetweenCommands;
-    gkHARMONIE.addCommand(timeout, () => {
+    gkHARMONIE.addCommand(delay, () => {
+      console.debug(`Send ${targetState} to ${item}`);
       item.sendCommand(targetState);
     });
   } else {
@@ -45,7 +45,7 @@ const queuePause = function (pause) {
  */
 const startActivity = function (activity, task) {
   if (typeof task === 'function') {
-    if (items.getItem('OPENHARMONIE_Activity_Starting').state == activity) {
+    if (items.getItem('OPENHARMONIE_Activity_Starting').state === activity) {
       // If activity is already active, execute the task directly
       task();
     } else {
@@ -53,7 +53,7 @@ const startActivity = function (activity, task) {
       changeToActivity[getKey(activities, activity)].onFinish = task;
       items.getItem('OPENHARMONIE_Activity_Starting').sendCommand(activity);
     }
-  } else if (task == undefined) {
+  } else if (task === undefined) {
     items.getItem('OPENHARMONIE_Activity_Starting').sendCommand(activity);
   } else {
     console.warn(`startActivity failed, task ${task} is not a function`);
@@ -212,55 +212,6 @@ const remotes = {
       REMOTE_RECORD: '42',
       REMOTE_PLAY: '43',
       REMOTE_STOP: '44',
-    },
-  },
-  TV_HISENSE_EN2BF27H_RemoteControl: {
-    device: 'TV_HISENSE_EN2BF27H',
-    commands: {
-      REMOTE_POWER: '0',
-      REMOTE_INPUT: '1',
-      REMOTE_1: '2',
-      REMOTE_2: '3',
-      REMOTE_3: '4',
-      REMOTE_4: '5',
-      REMOTE_5: '6',
-      REMOTE_6: '7',
-      REMOTE_7: '8',
-      REMOTE_8: '9',
-      REMOTE_9: '10',
-      REMOTE_0: '11',
-      REMOTE_GUIDE: '12',
-      REMOTE_SUBTITLE: '13',
-      REMOTE_RED: '14',
-      REMOTE_GREEN: '15',
-      REMOTE_YELLOW: '16',
-      REMOTE_BLUE: '17',
-      REMOTE_TEXT: '18',
-      REMOTE_TXT: '19',
-      REMOTE_UP: '20',
-      REMOTE_LEFT: '21',
-      REMOTE_RIGHT: '22',
-      REMOTE_DOWN: '23',
-      REMOTE_OK: '24',
-      REMOTE_BACK: '25',
-      REMOTE_EXIT: '26',
-      REMOTE_HOME: '27',
-      REMOTE_VOLUMEUP: '28',
-      REMOTE_VOLUMEDOWN: '29',
-      REMOTE_CHLIST: '30',
-      REMOTE_MUTE: '31',
-      REMOTE_CHANNELUP: '32',
-      REMOTE_CHANNELDOWN: '33',
-      REMOTE_REWIND: '34',
-      REMOTE_PLAY: '35',
-      REMOTE_FORWARD: '36',
-      REMOTE_PAUSE: '37',
-      REMOTE_AUDIOONLY: '38',
-      REMOTE_STOP: '39',
-      REMOTE_APPS: '40',
-      REMOTE_YOUTUBE: '41',
-      REMOTE_NETFLIX: '42',
-      REMOTE_RAKUTENTV: '43',
     },
   },
   BLURAY_PLAYER_PIONEER_RemoteControl: {
@@ -445,6 +396,14 @@ const remotes = {
       REMOTE_5: '4',
     },
   },
+  LAPTOP_LINUX_RemoteControl: {
+    device: 'LAPTOP_LINUX',
+    commands: {
+      KEY_SPACE: '32',
+      KEY_LEFT: '105',
+      KEY_RIGHT: '106',
+    },
+  },
 };
 
 // Send out or receive commands via MQTT
@@ -453,27 +412,20 @@ const remotes = {
  * Rule to update MQTT item to publish a command via MQTT
  * When a button on a remote control item is pushed, we use this rule
  */
+const remotesTriggers = Object.keys(remotes)
+  .filter((name) => !name.includes('OPENHARMONIE'))
+  .map((name) => triggers.ItemStateUpdateTrigger(name)); // Get all real RemoteControl items from remotes object
 rules.JSRule({
   name: 'Remote_Control_Button_Pushed',
-  triggers: [
-    triggers.ItemStateUpdateTrigger('TV_TELEFUNKEN_QU50K800_RemoteControl'),
-    triggers.ItemStateUpdateTrigger('TV_HISENSE_EN2BF27H_RemoteControl'),
-    triggers.ItemStateUpdateTrigger('BLURAY_PLAYER_PIONEER_RemoteControl'),
-    triggers.ItemStateUpdateTrigger('RECEIVER_SAMSUNG_KD_RemoteControl'),
-    triggers.ItemStateUpdateTrigger('HDMI_SWITCH_3_RemoteControl'),
-    triggers.ItemStateUpdateTrigger('HDMI_SWITCH_5_RemoteControl'),
-    triggers.ItemStateUpdateTrigger('FIRETV_RemoteControl'),
-    // Add other remote control items
-    // TODO make dynamic based on type instead of item name
-  ],
+  triggers: remotesTriggers,
   execute: (event) => {
     // Get device for remote control
     const device = remotes[event.itemName].device;
     // Get command name from receivedState number
     const commandToSend = getKey(remotes[event.itemName].commands, event.receivedState);
     // If command was found, update MQTT item
-    if (commandToSend != '' && commandToSend != undefined) {
-      console.debug(`Sending ${commandToSend} to ${device}`);
+    if (commandToSend !== '' && commandToSend !== undefined) {
+      console.debug(`Sending ${commandToSend} to ${device} via MQTT`);
       items.getItem('Send_Harmonie_Command').sendCommand(`${device} ${commandToSend}`); // Format is parsed on Pi 0 W side in send_command.sh
     } else {
       console.warn('commandToSend not found');
@@ -499,44 +451,54 @@ rules.JSRule({
 // Change power and input states of real devices
 
 /**
- * Rule to change power state items of physical devices
- * Triggered only on changes
+ * Helper functions to change power state of devices.
+ * Instead of reacting to items, the change is done openHARMONIE internally.
+ * Items are updated, too, to reflect the new state. They are not used to control the state.
  */
-rules.JSRule({
-  name: 'Device_Power_Pushed',
-  triggers: [
-    triggers.ItemStateChangeTrigger('TV_TELEFUNKEN_QU50K800_OnOff'),
-    triggers.ItemStateChangeTrigger('TV_HISENSE_EN2BF27H_OnOff'),
-    triggers.ItemStateChangeTrigger('BLURAY_PLAYER_PIONEER_OnOff'),
-    triggers.ItemStateChangeTrigger('RECEIVER_SAMSUNG_KD_OnOff'),
-    // Add other power state Switch items
-    // TODO make dynamic based on type instead of item name
-  ],
-  execute: (event) => {
-    switch (event.itemName) {
-      case 'TV_TELEFUNKEN_QU50K800_OnOff':
-        items
-          .getItem('TV_TELEFUNKEN_QU50K800_RemoteControl')
-          .sendCommand(remotes['TV_TELEFUNKEN_QU50K800_RemoteControl'].commands['REMOTE_POWER']);
-        break;
-      case 'TV_HISENSE_EN2BF27H_OnOff':
-        items
-          .getItem('TV_HISENSE_EN2BF27H_RemoteControl')
-          .sendCommand(remotes['TV_HISENSE_EN2BF27H_RemoteControl'].commands['REMOTE_POWER']);
-        break;
-      case 'BLURAY_PLAYER_PIONEER_OnOff':
-        items
-          .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
-          .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_POWER']);
-        break;
-      case 'RECEIVER_SAMSUNG_KD_OnOff':
-        items
-          .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
-          .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_POWER']);
-        break;
+const queuePowerState = {
+  /**
+   * Queue power state change of device
+   * @param {string} state Change to 'ON' or 'OFF'
+   */
+  TV_TELEFUNKEN_QU50K800_OnOff: (state) => {
+    if (items.getItem('TV_TELEFUNKEN_QU50K800_OnOff').state !== state) {
+      queueCommand(items.getItem('TV_TELEFUNKEN_QU50K800_OnOff'), state, 500);
+      queueCommand(
+        items.getItem('TV_TELEFUNKEN_QU50K800_RemoteControl'),
+        remotes['TV_TELEFUNKEN_QU50K800_RemoteControl'].commands['REMOTE_POWER'],
+        2500,
+      );
     }
   },
-});
+  /**
+   * Queue power state change of device
+   * @param {string} state Change to 'ON' or 'OFF'
+   */
+  BLURAY_PLAYER_PIONEER_OnOff: (state) => {
+    if (items.getItem('BLURAY_PLAYER_PIONEER_OnOff').state !== state) {
+      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), state, 500);
+      queueCommand(
+        items.getItem('BLURAY_PLAYER_PIONEER_RemoteControl'),
+        remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_POWER'],
+        2500,
+      );
+    }
+  },
+  /**
+   * Queue power state change of device
+   * @param {string} state Change to 'ON' or 'OFF'
+   */
+  RECEIVER_SAMSUNG_KD_OnOff: (state) => {
+    if (items.getItem('RECEIVER_SAMSUNG_KD_OnOff').state !== state) {
+      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), state, 800);
+      queueCommand(
+        items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
+        remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_POWER'],
+        2500,
+      );
+    }
+  },
+};
 
 /**
  * Mapping of input names to numbers
@@ -558,53 +520,232 @@ const inputs = {
 };
 
 /**
- * Rule to change input source items of physical devices
- * Triggered even if same input is selected
+ * Helper functions to change input sources.
+ * Instead of using items, the change is done openHARMONIE internally
  */
-rules.JSRule({
-  name: 'Device_Input_Pushed',
-  triggers: [
-    triggers.ItemStateUpdateTrigger('BLURAY_PLAYER_PIONEER_Input'),
-    triggers.ItemStateUpdateTrigger('HDMI_SWITCH_3_Input'),
-    triggers.ItemStateUpdateTrigger('HDMI_SWITCH_5_Input'),
-    // Add other input source Number items
-    // TODO make dynamic based on type instead of item name
-  ],
-  execute: (event) => {
-    const input = event.receivedState;
-    switch (event.itemName) {
-      case 'HDMI_SWITCH_3_Input':
-        items.getItem('HDMI_SWITCH_3_RemoteControl').sendCommand(input); // Possible, because input 0 = button 0 and so on
-        break;
-      case 'HDMI_SWITCH_5_Input':
-        items.getItem('HDMI_SWITCH_5_RemoteControl').sendCommand(input); // Possible, because input 0 = button 0 and so on
-        break;
-      case 'BLURAY_PLAYER_PIONEER_Input':
-        // To change input source on Bluray player, you have to push 'Function', followed by 'Right' x times and then 'OK'
-        const rightPushes = parseInt(event.receivedState);
-        // Send 'Function' command and wait:
-        queueCommand(
-          items.getItem('BLURAY_PLAYER_PIONEER_RemoteControl'),
-          remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_FUNCTION'],
-          1000,
-        );
-        // Push x times 'Right' depending on the input source and wait
-        for (let i = 0; i < rightPushes; i++) {
-          queueCommand(
-            items.getItem('BLURAY_PLAYER_PIONEER_RemoteControl'),
-            remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_RIGHT'],
-            1000,
-          );
-        }
-        // Push 'OK'
-        queueCommand(
-          items.getItem('BLURAY_PLAYER_PIONEER_RemoteControl'),
-          remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_ENTER'],
-        );
-      // ...
-    }
+const queueInputChange = {
+  /**
+   * Queue input source change of device
+   * @param {string} input Input source as a string.
+   * @param {number} [pause] Time in ms to wait after the change
+   */
+  HDMI_SWITCH_3: (input, pause = pauseBetweenCommands) => {
+    queueCommand(items.getItem('HDMI_SWITCH_3_RemoteControl'), input, pause); // Possible, because input 0 = button 0 and so on
   },
-});
+  /**
+   * Queue input source change of device
+   * @param {string} input Input source as a string.
+   * @param {number} [pause] Time in ms to wait after the change
+   */
+  HDMI_SWITCH_5: (input, pause = pauseBetweenCommands) => {
+    queueCommand(items.getItem('HDMI_SWITCH_5_RemoteControl'), input, pause); // Possible, because input 0 = button 0 and so on
+  },
+  /**
+   * Queue input source change of device
+   * @param {string} input Input source as a string.
+   * @param {number} [pause] Time in ms to wait after the change
+   */
+  BLURAY_PLAYER_PIONEER: (input, pause = pauseBetweenCommands * 2) => {
+    queueDeviceFunction['BLURAY_PLAYER_PIONEER'].setInput(input, pause);
+  },
+};
+
+// Device specific functions
+
+const queueDeviceFunction = {
+  BLURAY_PLAYER_PIONEER: {
+    /**
+     * Get the time in ms how long to wait until the device can receive further commands after power on.
+     * @returns {number} The time in ms to wait.
+     */
+    getDeviceWakeUpTime: () => {
+      if (previousActivity === activities['PowerOff']) {
+        return 14000;
+      } else {
+        return 0;
+      }
+    },
+    /**
+     * Sets the input source for the BLURAY_PLAYER_PIONEER device.
+     * Determines the number of directional pushes required to select the desired input
+     * and sends the appropriate remote commands to execute the change.
+     * @param {string} input The input source identifier as a string, which will be parsed to determine the number of pushes.
+     * @param {number} pause The time in milliseconds to wait after executing the final command.
+     */
+    setInput: (input, pause) => {
+      let pushes = parseInt(input);
+      let pushDirectionCommand = remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_RIGHT'];
+      const maxPushes = 8;
+      if (pushes > maxPushes / 2) {
+        pushes = maxPushes - pushes + 1;
+        pushDirectionCommand = remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_LEFT'];
+      }
+      // Send 'Function' command and wait:
+      queueCommand(
+        items.getItem('BLURAY_PLAYER_PIONEER_RemoteControl'),
+        remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_FUNCTION'],
+        3500,
+      );
+      // Push x times 'Right' or 'Left' depending on the input source and wait
+      for (let i = 0; i < pushes; i++) {
+        queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_RemoteControl'), pushDirectionCommand, 2000);
+      }
+      // Push 'OK'
+      queueCommand(
+        items.getItem('BLURAY_PLAYER_PIONEER_RemoteControl'),
+        remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_ENTER'],
+        pause,
+      );
+    },
+    /**
+     * Sets the volume level of the BLURAY_PLAYER_PIONEER device.
+     * @param {number} level The number of up pushes.
+     */
+    changeVolumeUp: (level) => {
+      for (let i = 1; i <= level; i++) {
+        const command = remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_VOLUMEUP'];
+        queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_RemoteControl'), command, 900);
+      }
+    },
+    /**
+     * Sets the volume level of the BLURAY_PLAYER_PIONEER device.
+     * @param {number} level The number of down pushes.
+     */
+    changeVolumeDown: (level) => {
+      for (let i = 1; i <= level; i++) {
+        const command = remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_VOLUMEDOWN'];
+        queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_RemoteControl'), command, 900);
+      }
+    },
+  },
+  RECEIVER_SAMSUNG_KD: {
+    /**
+     * Get the time in ms how long to wait until the device can receive further commands after power on.
+     * @returns {number} The time in ms to wait.
+     */
+    getDeviceWakeUpTime: () => {
+      const now = new Date();
+      const hour = now.getHours();
+      const minutes = now.getMinutes();
+      if (hour < 17 || (hour === 17 && minutes < 52) || hour > 23) {
+        return (60 + 35) * 1000; // 1:35 minutes
+      } else {
+        return 6000;
+      }
+    },
+    /**
+     * Sets the receiver to use Dolby audio via HDMI.
+     */
+    setDolbyAudio: () => {
+      queueCommand(
+        items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
+        remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_MENU'],
+        3500,
+      );
+      queueCommand(
+        items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
+        remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_UP'],
+        1500,
+      );
+      queueCommand(
+        items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
+        remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_RIGHT'],
+        1500,
+      );
+      queueCommand(
+        items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
+        remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_OK'],
+        3000,
+      );
+      queueCommand(
+        items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
+        remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_UP'],
+        2500,
+      );
+      queueCommand(
+        items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
+        remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_OK'],
+        2500,
+      );
+      queueCommand(
+        items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
+        remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_OK'],
+        2000,
+      );
+      queueCommand(
+        items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
+        remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_DOWN'],
+        1000,
+      );
+      queueCommand(
+        items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
+        remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_OK'],
+        1000,
+      );
+      queueCommand(
+        items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
+        remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_DOWN'],
+        1000,
+      );
+      queueCommand(
+        items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
+        remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_OK'],
+        1000,
+      );
+      queueCommand(
+        items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
+        remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_OK'],
+        6500,
+      );
+      queueCommand(
+        items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
+        remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_MENU'],
+        2000,
+      );
+      queueCommand(
+        items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
+        remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_MENU'],
+        1000,
+      );
+    },
+  },
+  HDMI_SWITCH_3: {
+    /**
+     * Get the time in ms how long to wait until the device can receive further commands after power on.
+     * @returns {number} The time in ms to wait.
+     */
+    getDeviceWakeUpTime: () => {
+      if (previousActivity === activities['PowerOff']) {
+        return 5000; // Wait for Chromecast to wake up
+      }
+      return 0;
+    },
+  },
+  HDMI_SWITCH_5: {
+    /**
+     * Get the time in ms how long to wait until the device can receive further commands after power on.
+     * @returns {number} The time in ms to wait.
+     */
+    getDeviceWakeUpTime: () => {
+      if (previousActivity === activities['PowerOff']) {
+        return 5000;
+      }
+      return 0;
+    },
+  },
+  TV_TELEFUNKEN_QU50K800: {
+    /**
+     * Get the time in ms how long to wait until the device can receive further commands after power on.
+     * @returns {number} The time in ms to wait.
+     */
+    getDeviceWakeUpTime: () => {
+      if (previousActivity === activities['PowerOff']) {
+        return 5000; // Wait for TV to wake up
+      }
+      return 0;
+    },
+  },
+};
 
 // openHARMONIE implementation
 
@@ -622,92 +763,78 @@ const activities = {
 };
 
 /**
- * Map of necessary settings (power states, input states, ...) for each activity
+ * Map of necessary settings (power states, input states, ...) for each activity.
  * Starting an activity has different phases:
  * - Phase 0: onExit - commands that are executed if the activity ends
  * - Phase 1: powerStates - commands that are executed to set the correct power states of the devices for the starting activity
  * - Phase 2: inputStates - commands that are executed to set the correct input states
  * - Phase 3: onEnter - commands that are executed additionally to start the new activity
  * - Phase 4: onFinish - optional commands which can be dynamically changed depending e.g. on starting a favourite channel
- * Every command of a phase needs to be added to the global Gatekeeper with the queueCommand/queuePause helper
- * Timing of commands after power on commands needs to be fine tuned to allow the target device to fully boot up and be able to receive further commands
+ * Every command of a phase needs to be added to the global Gatekeeper with the queueCommand/queuePause helper.
+ * Timing of commands after power on commands needs to be fine tuned to allow the target device to fully boot up and be able to receive further commands.
+ * For input switches the input change function needs to be used, otherwise the queued commands are in wrong order.
  */
 const changeToActivity = {
   PowerOff: {
     powerStates: () => {
-      queueCommand(items.getItem('TV_TELEFUNKEN_QU50K800_OnOff'), 'OFF', pauseBetweenCommands * 2);
-      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'OFF', pauseBetweenCommands * 2);
-      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'OFF', pauseBetweenCommands * 2);
+      queuePowerState['BLURAY_PLAYER_PIONEER_OnOff']('OFF');
+      queuePowerState['TV_TELEFUNKEN_QU50K800_OnOff']('OFF');
+      queuePowerState['RECEIVER_SAMSUNG_KD_OnOff']('OFF');
     },
     inputStates: () => {},
-    onEnter: () => {},
+    onEnter: () => {
+      queuePause(12000); // Wait until all devices are fully off
+    },
     onFinish: () => {},
     onExit: () => {},
   },
   TV: {
     powerStates: () => {
-      queueCommand(items.getItem('TV_TELEFUNKEN_QU50K800_OnOff'), 'ON', pauseBetweenCommands * 2);
-      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'ON', pauseBetweenCommands * 2);
-      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'ON', pauseBetweenCommands * 2);
+      queuePowerState['TV_TELEFUNKEN_QU50K800_OnOff']('ON');
+      queuePowerState['BLURAY_PLAYER_PIONEER_OnOff']('ON');
+      queuePowerState['RECEIVER_SAMSUNG_KD_OnOff']('ON');
     },
     inputStates: () => {
-      queuePause(2000);
-      if (previousActivity == activities['PowerOff']) {
-        queuePause(6000); // Wait for Chromecast (powered on with the whole system) to send HDMI signal to Switch 3, then change input afterwards
-      }
-      queueCommand(items.getItem('HDMI_SWITCH_3_Input'), inputs['HDMI_SWITCH_3_Input']['HDMI1'], 1000);
-      queueCommand(items.getItem('HDMI_SWITCH_5_Input'), inputs['HDMI_SWITCH_5_Input']['HDMI2']);
+      queuePause(queueDeviceFunction['BLURAY_PLAYER_PIONEER'].getDeviceWakeUpTime());
+      queueInputChange['BLURAY_PLAYER_PIONEER'](inputs['BLURAY_PLAYER_PIONEER_Input']['HDMI2']);
     },
     onEnter: () => {
       // Cable receiver is in sleep state until 18:00 and takes very long to start up - add a pause in this case
-      const now = new Date();
-      const hour = now.getHours();
-      const minutes = now.getMinutes();
-      if (hour < 17 || (hour == 17 && minutes < 52)) {
-        queuePause(100 * 1000); // 1:40 minutes
-      } else {
-        queuePause(2000);
-      }
+      queuePause(queueDeviceFunction['RECEIVER_SAMSUNG_KD'].getDeviceWakeUpTime());
     },
     onFinish: () => {},
     onExit: () => {},
   },
   FireTV: {
     powerStates: () => {
-      queueCommand(items.getItem('TV_TELEFUNKEN_QU50K800_OnOff'), 'ON', pauseBetweenCommands * 2);
-      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'ON', pauseBetweenCommands * 2);
-      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'OFF', pauseBetweenCommands * 2);
+      queuePowerState['TV_TELEFUNKEN_QU50K800_OnOff']('ON');
+      queuePowerState['BLURAY_PLAYER_PIONEER_OnOff']('ON');
+      queuePowerState['RECEIVER_SAMSUNG_KD_OnOff']('OFF');
     },
     inputStates: () => {
-      if (previousActivity == activities['PowerOff']) {
-        queuePause(4000);
-      }
-      queueCommand(items.getItem('HDMI_SWITCH_5_Input'), inputs['HDMI_SWITCH_5_Input']['HDMI1']);
-    },
-    onEnter: () => {
       // Establish ADB connection, this can take a few seconds to start the daemon
       queueCommand(
         items.getItem('FIRETV_RemoteControl'),
         remotes['FIRETV_RemoteControl'].commands['REMOTE_CONNECT'],
-        5000,
+        6000,
       );
-      // Press menu button of FireTV
-      if (previousActivity == activities['PowerOff']) {
-        queuePause(2000);
-      }
       queueCommand(items.getItem('FIRETV_RemoteControl'), remotes['FIRETV_RemoteControl'].commands['KEY_HOMEPAGE']);
       // Workaround for input keyevent
       queueCommand(items.getItem('FIRETV_RemoteControl'), remotes['FIRETV_RemoteControl'].commands['KEY_BACK']);
       queueCommand(items.getItem('FIRETV_RemoteControl'), remotes['FIRETV_RemoteControl'].commands['KEY_HOMEPAGE']);
-      queuePause(5500);
+      queuePause(Math.max(4000, queueDeviceFunction['BLURAY_PLAYER_PIONEER'].getDeviceWakeUpTime() - 5000));
+      // After Fire TV sends signal, change inputs, otherwise screen flickers
+      queueInputChange['HDMI_SWITCH_5'](inputs['HDMI_SWITCH_5_Input']['HDMI1'], 5000);
+      queueInputChange['BLURAY_PLAYER_PIONEER'](inputs['BLURAY_PLAYER_PIONEER_Input']['HDMI1']);
     },
+    onEnter: () => {},
     onFinish: () => {},
     onExit: () => {
       // Press menu button of FireTV
       queueCommand(
         items.getItem('FIRETV_RemoteControl'),
         remotes['FIRETV_RemoteControl'].commands['KEY_HOMEPAGE'],
-        3000,
+        2000,
       );
       // Disconnect ADB
       queueCommand(
@@ -718,16 +845,15 @@ const changeToActivity = {
   },
   Chromecast: {
     powerStates: () => {
-      queueCommand(items.getItem('TV_TELEFUNKEN_QU50K800_OnOff'), 'ON', pauseBetweenCommands * 2);
-      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'ON', pauseBetweenCommands * 2);
-      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'OFF', pauseBetweenCommands * 2);
+      queuePowerState['TV_TELEFUNKEN_QU50K800_OnOff']('ON');
+      queuePowerState['BLURAY_PLAYER_PIONEER_OnOff']('ON');
+      queuePowerState['RECEIVER_SAMSUNG_KD_OnOff']('OFF');
     },
     inputStates: () => {
-      if (previousActivity == activities['PowerOff']) {
-        queuePause(4000);
-      }
-      queueCommand(items.getItem('HDMI_SWITCH_3_Input'), inputs['HDMI_SWITCH_3_Input']['HDMI3'], 1000);
-      queueCommand(items.getItem('HDMI_SWITCH_5_Input'), inputs['HDMI_SWITCH_5_Input']['HDMI2']);
+      queuePause(queueDeviceFunction['BLURAY_PLAYER_PIONEER'].getDeviceWakeUpTime());
+      queueInputChange['HDMI_SWITCH_3'](inputs['HDMI_SWITCH_3_Input']['HDMI3'], 1000);
+      queueInputChange['HDMI_SWITCH_5'](inputs['HDMI_SWITCH_5_Input']['HDMI2'], 5000);
+      queueInputChange['BLURAY_PLAYER_PIONEER'](inputs['BLURAY_PLAYER_PIONEER_Input']['HDMI1']);
     },
     onEnter: () => {},
     onExit: () => {},
@@ -735,53 +861,50 @@ const changeToActivity = {
   },
   Film: {
     powerStates: () => {
-      queueCommand(items.getItem('TV_TELEFUNKEN_QU50K800_OnOff'), 'ON', pauseBetweenCommands * 2);
-      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'ON', pauseBetweenCommands * 2);
-      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'OFF', pauseBetweenCommands * 2);
+      queuePowerState['TV_TELEFUNKEN_QU50K800_OnOff']('ON');
+      queuePowerState['BLURAY_PLAYER_PIONEER_OnOff']('ON');
+      queuePowerState['RECEIVER_SAMSUNG_KD_OnOff']('OFF');
     },
     inputStates: () => {},
     onEnter: () => {
+      queuePause(queueDeviceFunction['BLURAY_PLAYER_PIONEER'].getDeviceWakeUpTime());
       queueCommand(
         items.getItem('BLURAY_PLAYER_PIONEER_RemoteControl'),
         remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_HOMEMENU'],
       );
     },
     onFinish: () => {},
-    onExit: () => {
-      // Switch input back to HDMI 1
-      // TODO Refactor call; we don't need a queueCommand here, because the input change internally queues commands
-      // Queue in queue leads to wrong order, commands are at the end of queue instead of the middle
-      // But it would be better if the onExit consists of queueCommand/queuePause calls
-      items.getItem('BLURAY_PLAYER_PIONEER_Input').sendCommand(inputs['BLURAY_PLAYER_PIONEER_Input']['HDMI1']);
-    },
+    onExit: () => {},
   },
   Wii: {
     powerStates: () => {
-      queueCommand(items.getItem('TV_TELEFUNKEN_QU50K800_OnOff'), 'ON', pauseBetweenCommands * 2);
-      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'ON', pauseBetweenCommands * 2);
-      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'OFF', pauseBetweenCommands * 2);
+      queuePowerState['TV_TELEFUNKEN_QU50K800_OnOff']('ON');
+      queuePowerState['BLURAY_PLAYER_PIONEER_OnOff']('ON');
+      queuePowerState['RECEIVER_SAMSUNG_KD_OnOff']('OFF');
     },
     inputStates: () => {
-      if (previousActivity == activities['PowerOff']) {
-        queuePause(4000);
-      }
-      queueCommand(items.getItem('HDMI_SWITCH_5_Input'), inputs['HDMI_SWITCH_5_Input']['HDMI5']);
+      queuePause(queueDeviceFunction['BLURAY_PLAYER_PIONEER'].getDeviceWakeUpTime());
+      queueInputChange['HDMI_SWITCH_5'](inputs['HDMI_SWITCH_5_Input']['HDMI5'], 5000);
+      queueInputChange['BLURAY_PLAYER_PIONEER'](inputs['BLURAY_PLAYER_PIONEER_Input']['HDMI1']);
     },
-    onEnter: () => {},
+    onEnter: () => {
+      // Set volume to a moderate level
+      queueDeviceFunction['BLURAY_PLAYER_PIONEER'].changeVolumeDown(15);
+      queueDeviceFunction['BLURAY_PLAYER_PIONEER'].changeVolumeUp(6);
+    },
     onFinish: () => {},
     onExit: () => {},
   },
   HDMI: {
     powerStates: () => {
-      queueCommand(items.getItem('TV_TELEFUNKEN_QU50K800_OnOff'), 'ON', pauseBetweenCommands * 2);
-      queueCommand(items.getItem('BLURAY_PLAYER_PIONEER_OnOff'), 'ON', pauseBetweenCommands * 2);
-      queueCommand(items.getItem('RECEIVER_SAMSUNG_KD_OnOff'), 'OFF', pauseBetweenCommands * 2);
+      queuePowerState['TV_TELEFUNKEN_QU50K800_OnOff']('ON');
+      queuePowerState['BLURAY_PLAYER_PIONEER_OnOff']('ON');
+      queuePowerState['RECEIVER_SAMSUNG_KD_OnOff']('OFF');
     },
     inputStates: () => {
-      if (previousActivity == activities['PowerOff']) {
-        queuePause(4000);
-      }
-      queueCommand(items.getItem('HDMI_SWITCH_5_Input'), inputs['HDMI_SWITCH_5_Input']['HDMI4']);
+      queuePause(queueDeviceFunction['BLURAY_PLAYER_PIONEER'].getDeviceWakeUpTime());
+      queueInputChange['HDMI_SWITCH_5'](inputs['HDMI_SWITCH_5_Input']['HDMI4'], 5000);
+      queueInputChange['BLURAY_PLAYER_PIONEER'](inputs['BLURAY_PLAYER_PIONEER_Input']['HDMI1']);
     },
     onEnter: () => {},
     onFinish: () => {},
@@ -801,9 +924,21 @@ const changeToActivity = {
 const activityCommands = {
   PowerOff: {
     OPENHARMONIE_POWER: () => {
-      if (previousActivity != undefined) {
+      if (previousActivity !== undefined) {
         startActivity(previousActivity);
       }
+    },
+    OPENHARMONIE_VOLUMEUP: () => {
+      // Handled in echovolume.js
+    },
+    OPENHARMONIE_VOLUMEDOWN: () => {
+      // Handled in echovolume.js
+    },
+    OPENHARMONIE_CHANNELUP: () => {
+      // Handled in echovolume.js
+    },
+    OPENHARMONIE_CHANNELDOWN: () => {
+      // Handled in echovolume.js
     },
   },
   TV: {
@@ -969,6 +1104,10 @@ const activityCommands = {
         .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
         .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_MENU']);
     },
+    OPENHARMONIE_3D: () => {
+      // Set HDMI audio output to surround
+      //queueDeviceFunction['RECEIVER_SAMSUNG_KD'].setDolbyAudio();
+    },
   },
   FireTV: {
     OPENHARMONIE_UP: () => {
@@ -1132,7 +1271,7 @@ const activityCommands = {
         .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_POPUPMENU']);
     },
     // Physical
-    OPENHARMONIE_FORMAT: () => {
+    OPENHARMONIE_EXIT: () => {
       items
         .getItem('OPENHARMONIE_RemoteControl')
         .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_OPENCLOSE']);
@@ -1142,14 +1281,45 @@ const activityCommands = {
         .getItem('OPENHARMONIE_RemoteControl')
         .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_TOPMENU']);
     },
-    OPENHARMONIE_OPTIONS: () => {
+    OPENHARMONIE_INFO: () => {
       items
         .getItem('OPENHARMONIE_RemoteControl')
         .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_POPUPMENU']);
     },
+    OPENHARMONIE_CHANNELUP: () => {
+      items
+        .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_SKIPNEXT']);
+    },
+    OPENHARMONIE_CHANNELDOWN: () => {
+      items
+        .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
+        .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_SKIPBACK']);
+    },
   },
   Wii: {},
-  HDMI: {},
+  HDMI: {
+    OPENHARMONIE_REWIND: () => {
+      items
+        .getItem('LAPTOP_LINUX_RemoteControl')
+        .sendCommand(remotes['LAPTOP_LINUX_RemoteControl'].commands['KEY_LEFT']);
+    },
+    OPENHARMONIE_PAUSEPLAY: () => {
+      items
+        .getItem('LAPTOP_LINUX_RemoteControl')
+        .sendCommand(remotes['LAPTOP_LINUX_RemoteControl'].commands['KEY_SPACE']);
+    },
+    OPENHARMONIE_PAUSE: () => {
+      items
+        .getItem('LAPTOP_LINUX_RemoteControl')
+        .sendCommand(remotes['LAPTOP_LINUX_RemoteControl'].commands['KEY_SPACE']);
+    },
+    OPENHARMONIE_FORWARD: () => {
+      items
+        .getItem('LAPTOP_LINUX_RemoteControl')
+        .sendCommand(remotes['LAPTOP_LINUX_RemoteControl'].commands['KEY_RIGHT']);
+    },
+  },
   default: {
     OPENHARMONIE_POWER: () => {
       startActivity(activities['PowerOff']);
@@ -1212,7 +1382,7 @@ const activityCommands = {
         );
         queueCommand(
           items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
-          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_0'],
+          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_2'],
         );
       });
     },
@@ -1276,7 +1446,7 @@ const activityCommands = {
         );
         queueCommand(
           items.getItem('RECEIVER_SAMSUNG_KD_RemoteControl'),
-          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_8'],
+          remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_9'],
         );
       });
     },
@@ -1381,7 +1551,6 @@ const activityCommands = {
     OPENHARMONIE_FIRETVTV: () => {
       startActivity(activities['FireTV'], () => {
         // Workaround, KEY_PROGRAM does not work and 'adb shell' does not have the rights to start the com.amazon.tv.livetv./GuideWrapperActivity
-        //queueCommand(items.getItem('FIRETV_RemoteControl'), remotes['FIRETV_RemoteControl'].commands['KEY_PROGRAM']);
         queueCommand(
           items.getItem('FIRETV_RemoteControl'),
           remotes['FIRETV_RemoteControl'].commands['KEY_HOMEPAGE'],
@@ -1423,7 +1592,7 @@ rules.JSRule({
       } else if (activityCommands['default'][command]) {
         activityCommands['default'][command]();
       } else {
-        console.info(`No button mapping found for ${command} and activity ${currentActivity}`);
+        console.debug(`No button mapping found for ${command} and activity ${currentActivity}`);
       }
     } else {
       console.info(`Activity ${getKey(activities, activityStarting)} is currently starting, button press ignored`);
@@ -1442,12 +1611,11 @@ rules.JSRule({
   triggers: [triggers.ItemStateChangeTrigger('OPENHARMONIE_Activity_Starting')],
   execute: (event) => {
     const newActivity = event.newState;
-    if (activityStarting != undefined) {
+    if (activityStarting !== undefined) {
       // If an activity is already starting, don't start the new one
-      // TODO: check if this is necessary or if it is better to cancel all queued commands and just restart
       console.info(`Activity ${getKey(activities, activityStarting)} is already starting, no change possible...`);
       // Reset the starting item to the currently starting activity
-      items.getItem('OPENHARMONIE_Activity_Starting').sendCommand(activityStarting);
+      items.getItem('OPENHARMONIE_Activity_Starting').sendCommandIfDifferent(activityStarting);
     } else {
       // Start activity and persist previous activity
       gkHARMONIE.addCommand(pauseBetweenCommands, () => {
@@ -1477,14 +1645,9 @@ rules.JSRule({
       });
       // PHASE 3
       // Execute additional commands for new activity with info about previous activity
-      // and and reset starting flag
       if (typeof changeToActivity[getKey(activities, newActivity)]?.onEnter === 'function') {
         changeToActivity[getKey(activities, newActivity)].onEnter();
       }
-      gkHARMONIE.addCommand(500, () => {
-        activityStarting = undefined;
-        console.info(`${getKey(activities, newActivity)} started.`);
-      });
       // PHASE 4
       // Execute additional commands after the activity has started
       if (typeof changeToActivity[getKey(activities, newActivity)]?.onFinish === 'function') {
@@ -1494,6 +1657,11 @@ rules.JSRule({
           changeToActivity[getKey(activities, newActivity)].onFinish = () => {};
         });
       }
+      // Reset starting flag
+      gkHARMONIE.addCommand(500, () => {
+        activityStarting = undefined;
+        console.info(`${getKey(activities, newActivity)} started.`);
+      });
     }
   },
 });
@@ -1630,15 +1798,15 @@ rules.JSRule({
   name: 'openHARMONIE_Voice_Commands',
   triggers: [triggers.GroupStateUpdateTrigger('openHARMONIE_AVC_Group')],
   execute: (event) => {
-    if (event.receivedState == 'ON') {
+    if (event.receivedState === 'ON') {
       const itemName = event.itemName;
       if (typeof voiceCommands[itemName] === 'function') {
         voiceCommands[itemName]();
       }
     }
     if (
-      event.receivedState == 'OFF' &&
-      items.getItem('OPENHARMONIE_Activity_Starting').state != activities['PowerOff']
+      event.receivedState === 'OFF' &&
+      items.getItem('OPENHARMONIE_Activity_Starting').state !== activities['PowerOff']
     ) {
       items.getItem('OPENHARMONIE_Activity_Starting').sendCommand(activities['PowerOff']);
     }

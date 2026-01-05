@@ -5,9 +5,7 @@ if [[ -z $1 ]]
         echo "No key was given"
         exit
 fi
+# Add sleeps to avoid missed signals
+sleep .05
 ir-ctl -d /dev/lirc-tx --send=/home/pi/openharmonie/remotes/raw/RECEIVER_SAMSUNG_KD/$1.txt 2> /dev/null
-if [[ "$1" == "REMOTE_POWER" ]]
-then
-	ir-ctl -d /dev/lirc-tx --send=/home/pi/openharmonie/remotes/raw/RECEIVER_SAMSUNG_KD/$1.txt 2> /dev/null
-	ir-ctl -d /dev/lirc-tx --send=/home/pi/openharmonie/remotes/raw/RECEIVER_SAMSUNG_KD/$1.txt 2> /dev/null
-fi
+sleep .1

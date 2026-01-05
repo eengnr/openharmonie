@@ -5,7 +5,7 @@ variant = "rc-6-0"
 
 [protocols.scancodes]
 0x0c = "KEY_MACRO1" # Power
-0x9f = "BTN_TRIGGER_HAPPY" # TV
+0x9f = "BTN_TRIGGER_HAPPY1" # TV
 0x4b = "BTN_TRIGGER_HAPPY2" # Subtitle
 0x3c = "BTN_TRIGGER_HAPPY3" # Teletext
 0x38 = "BTN_TRIGGER_HAPPY4" # Source

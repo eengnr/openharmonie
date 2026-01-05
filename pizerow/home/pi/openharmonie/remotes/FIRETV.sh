@@ -14,28 +14,45 @@ readonly INPUT_FIRETVREMOTE="/tmp/firetvremote"
 
 if [[ "$1" = "REMOTE_CONNECT" ]]
     then
-        # Connect ADB
-        adb connect "$FIRETV_HOST":5555 > /dev/null 2>&1
-        # Init possible input variables
-        adb shell getevent -lp 2> /dev/null | grep -B 1 -F "amzkeyboard" | grep -o \/dev.*event.*$ > "$INPUT_AMZKEYBOARD"
-        adb shell getevent -lp 2> /dev/null | grep -B 1 -F "Amazon Fire TV Remote" | grep -o \/dev.*event.*$ > "$INPUT_FIRETVREMOTE"
+        echo "Remote connect"
         # Connect BT keyboard
         if [[ -e "$BT_HELPER_DEVICE" ]];
             then
+                echo "Connecting BT..."
                 echo -e $1 > "$BT_HELPER_DEVICE"
         fi
+        # Connect ADB, try three times
+        retry=3
+        while [[ $retry -gt 0 ]] ; do
+            echo "Connecting ADB..."
+            adb connect "$FIRETV_HOST":5555 > /dev/null 2>&1
+            # Check connection
+            CONN=$(adb devices | grep $FIRETV_HOST)
+            if [[ -n "$CONN" ]]
+                then
+                    break
+            else
+                echo "Connection failed, retrying..."
+                adb kill-server > /dev/null
+                retry=$((retry - 1))
+                sleep 1
+            fi
+        done
+        # Init possible input variables
+        adb shell getevent -lp 2> /dev/null | grep -B 1 -F "amzkeyboard" | grep -o \/dev.*event.*$ > "$INPUT_AMZKEYBOARD"
+        adb shell getevent -lp 2> /dev/null | grep -B 1 -F "Amazon Fire TV Remote" | grep -o \/dev.*event.*$ > "$INPUT_FIRETVREMOTE"
 elif [[ "$1" = "REMOTE_DISCONNECT" ]]
     then
-        # Disconnect ADB
-        adb disconnect > /dev/null
-        rm "$INPUT_AMZKEYBOARD"
-        rm "$INPUT_FIRETVREMOTE"
-        adb kill-server > /dev/null
         # Disconnect BT keyboard
         if [ -e "$BT_HELPER_DEVICE" ];
             then
                 echo -e $1 > "$BT_HELPER_DEVICE"
         fi
+        # Disconnect ADB
+        adb disconnect > /dev/null
+        rm "$INPUT_AMZKEYBOARD" > /dev/null 2>&1
+        rm "$INPUT_FIRETVREMOTE" > /dev/null 2>&1
+        adb kill-server > /dev/null
 elif [[ "$1" = *"REMOTE_APP_"* ]]
     then
         ACTIVITY=""

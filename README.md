@@ -49,7 +49,7 @@ It took me almost three months to figure everything out and implement it.
 
 ### Skills and basic software setup
 
-- openHAB (Openhabian) is set up and running on Raspberry Pi 5 (Bookworm with openHAB 4.2.1)
+- openHAB (openHABian) is set up and running on Raspberry Pi 5 (Bookworm with openHAB 5.1.0)
 - openHAB has the JavaScript binding installed and the openhab_rules_tools
 - Knowledge about how to use openHAB is already available
 - Raspbian Lite is set up and running on Raspberry Pi Zero W (Bullseye, Bookworm does not work properly for this as of March 2025!)
@@ -168,13 +168,9 @@ Necessary for each physical remote control belonging to a physical device:
 ### Physical devices
 
 Necessary for each physical device (TV, Receiver, HDMI switches ...)
-- 1 Switch item for power state. If switch item is turned ON/OFF, the physical remote number item is updated to send a power signal
+- 1 Switch item for power state. The item only reflects the current power state, it is not used to control it.
 
   `TV_HISENSE_EN2BF27H_OnOff`, `BLURAY_PLAYER_PIONEER_OnOff`, ...
-
-- 1 Number item for the input source of the device (HDMI1, HDMI2, ...), e.g. necessary for TVs or HDMI switches
-
-  `TV_HISENSE_EN2BF27H_Input`, `BLURAY_PLAYER_PIONEER_Input`, ...
 
 Note: if the "physical remote" number Item of the device is updated directly via UI (i.e. "a button is pressed on the physical remote"), the switch Item is NOT changed. That's how we can correct device status if IR commands failed
 
@@ -229,10 +225,8 @@ See `/etc/openhab/etc/items/openharmonie.items`
 
 Necessary rules:
 - Rule to send a remote control command to the Pi Zero W if a remote control button was pushed (`Remote_Control_Button_Pushed`) (= update MQTT Item with state if a remote control item changes its state)
-- Rule to send a command to a target device if the button on the physical/virtual openHARMONIE was pushed (`openHARMONIE_Button_Pushed`)
-- Rule to send a command if the power state item of a device changes (`Device_Power_Pushed`)
-- Rule to send a command if the input state item of a device changes (`Device_Input_Pushed`)
 - Rule to process an incoming IR command via MQTT from the physical openHARMONIE (`IR_Command_Received_Via_MQTT`)
+- Rule to send a command to a target device if the button on the physical/virtual openHARMONIE was pushed (`openHARMONIE_Button_Pushed`)
 - Rule to start an activity (`openHARMONIE_Activity_Starting`)
 - Rule for voice commands (`openHARMONIE_Voice_Commands`)
 
@@ -786,6 +780,46 @@ Sending an event with `sendevent` is faster, but for this the virtual keyboard m
 As an alternative to the virtual keyboard, the `sendevent` can be sent to the device which appears if the Fire TV remote was used.
 But this is not always available.
 The best way to control the Fire TV is via Bluetooth. The `FIRETV.sh` tries to use the best available way to send the commands.
+
+### Setup Linux laptop
+
+If `HDMI` is started as activity, a Linux laptop can be controlled.
+To be able to do this, `ydotool` needs to be installed on the Linux laptop and `ssh` access from the Pi Zero W to the laptop needs to be set up.
+
+On the Linux laptop:
+
+- Install `ydotool`
+
+  `$ sudo apt update && sudo apt install ydotool`
+
+On the Pi Zero W:
+
+- Login as `openharmonie`
+
+  `$ su - openharmonie`
+
+- Create a ssh key
+
+  `$ ssh-keygen -t ed25519 -C "openharmonie"`
+
+- Copy the public key to the laptop (exchange user and host accordingly)
+
+  `$ ssh-copy-id user@linux.home`
+
+- Create an alias
+
+  `$ vi .ssh/config`
+  ```
+  Host linux
+      User user
+      IdentityFile ~/.ssh/id_ed25519
+      HostName linux.home
+      PreferredAuthentications publickey
+  ```
+
+- Logout from `openharmonie`
+
+  `$ exit`
 
 ## Pi Pico W configuration
 

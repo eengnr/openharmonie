@@ -4,9 +4,9 @@ Group openHARMONIE_Group "openHARMONIE" <mediacontrol> ["RemoteControl"]
 
 // Items for MQTT communcation
 
-String Send_Harmonie_Command "Send Harmonie Command" <text> (openHARMONIE_Group) ["Status"] {channel="mqtt:topic:mqttbroker:pi0w:Pi0WHarmonie"}
+String Send_Harmonie_Command "Send openHARMONIE command" <text> (openHARMONIE_Group) ["Status"] {channel="mqtt:topic:mqttbroker:pi0w:Pi0WHarmonie"}
 
-String Receive_Harmonie_Command "Receive Harmonie Command" <text> (openHARMONIE_Group) ["Status"] {channel="mqtt:topic:mqttbroker:oh:OHHarmonie"}
+String Receive_Harmonie_Command "Receive openHARMONIE command" <text> (openHARMONIE_Group) ["Status"] {channel="mqtt:topic:mqttbroker:oh:OHHarmonie"}
 
 // Items for activities
 
@@ -43,6 +43,7 @@ Group openHARMONIE_RemoteControl_BlurayPlayer_Group "Bluray Player" <mediacontro
 Group openHARMONIE_RemoteControl_FireTV_Group "Fire TV" <mediacontrol> (openHARMONIE_RemoteControl_Group) ["RemoteControl"]
 Group openHARMONIE_RemoteControl_HDMISwitch3_Group "HDMI Switch 3" <mediacontrol> (openHARMONIE_RemoteControl_Group) ["RemoteControl"]
 Group openHARMONIE_RemoteControl_HDMISwitch5_Group "HDMI Switch 5" <mediacontrol> (openHARMONIE_RemoteControl_Group) ["RemoteControl"]
+Group openHARMONIE_RemoteControl_LaptopLinux_Group "Laptop Linux" <mediacontrol> (openHARMONIE_RemoteControl_Group) ["RemoteControl"]
 
 // Items for remote controls
 
@@ -177,55 +178,6 @@ Number TV_TELEFUNKEN_QU50K800_RemoteControl "Fernseher Fernbedienung" <mediacont
 			42=REMOTE_RECORD,
 			43=REMOTE_PLAY,
 			44=REMOTE_STOP"
-	]
-}
-
-Number TV_HISENSE_EN2BF27H_RemoteControl "Fernseher Fernbedienung" <mediacontrol> (openHARMONIE_RemoteControl_Fernseher_Group) ["RemoteControl"] {
-	stateDescription=""[
-		options="0=REMOTE_POWER,
-			1=REMOTE_INPUT,
-			2=REMOTE_1,
-			3=REMOTE_2,
-			4=REMOTE_3,
-			5=REMOTE_4,
-			6=REMOTE_5,
-			7=REMOTE_6,
-			8=REMOTE_7,
-			9=REMOTE_8,
-			10=REMOTE_9,
-			11=REMOTE_0,
-			12=REMOTE_GUIDE,
-			13=REMOTE_SUBTITLE,
-			14=REMOTE_RED,
-			15=REMOTE_GREEN,
-			16=REMOTE_YELLOW,
-			17=REMOTE_BLUE,
-			18=REMOTE_TEXT,
-			19=REMOTE_TXT,
-			20=REMOTE_UP,
-			21=REMOTE_LEFT,
-			22=REMOTE_RIGHT,
-			23=REMOTE_DOWN,
-			24=REMOTE_OK,
-			25=REMOTE_BACK,
-			26=REMOTE_EXIT,
-			27=REMOTE_HOME,
-			28=REMOTE_VOLUMEUP,
-			29=REMOTE_VOLUMEDOWN,
-			30=REMOTE_CHLIST,
-			31=REMOTE_MUTE,
-			32=REMOTE_CHANNELUP,
-			33=REMOTE_CHANNELDOWN,
-			34=REMOTE_REWIND,
-			35=REMOTE_PLAY,
-			36=REMOTE_FORWARD,
-			37=REMOTE_PAUSE,
-			38=REMOTE_AUDIOONLY,
-			39=REMOTE_STOP,
-			40=REMOTE_APPS,
-			41=REMOTE_YOUTUBE,
-			42=REMOTE_NETFLIX,
-			43=REMOTE_RAKUTENTV"
 	]
 }
 
@@ -411,60 +363,19 @@ Number HDMI_SWITCH_5_RemoteControl "HDMI Switch 5 Fernbedienung" <mediacontrol> 
 	]
 }
 
+Number LAPTOP_LINUX_RemoteControl "Laptop Linux Fernbedienung" <mediacontrol> (openHARMONIE_RemoteControl_LaptopLinux_Group) ["RemoteControl"] {
+	stateDescription=""[
+		options="32=KEY_SPACE,
+			105=KEY_LEFT,
+			106=KEY_RIGHT"
+	]
+}
+
 // Items for power states
 
 Switch TV_TELEFUNKEN_QU50K800_OnOff "Fernseher Schalter" <switch> (Fernseher) ["Switch"]
-Switch TV_HISENSE_EN2BF27H_OnOff "Fernseher Schalter" <switch> (Fernseher) ["Switch"]
 Switch BLURAY_PLAYER_PIONEER_OnOff "Bluray Player Schalter" <switch> (BlurayPlayer) ["Switch"]
 Switch RECEIVER_SAMSUNG_KD_OnOff "Receiver Schalter" <switch> (Receiver) ["Switch"]
-
-// Items for input states
-
-Number TV_TELEFUNKEN_QU50K800_Input "Fernseher Input" <mediacontrol> (Fernseher) ["Status"] {
-	stateDescription=""[
-		options="0=HDMI_1,
-			1=HDMI_2"
-	]
-}
-
-Number TV_HISENSE_EN2BF27H_Input "Fernseher Input" <mediacontrol> (Fernseher) ["Status"] {
-	stateDescription=""[
-		options="0=HDMI_1,
-			1=HDMI_2"
-	]
-}
-
-Number BLURAY_PLAYER_PIONEER_Input "Bluray Player Input" <mediacontrol> (BlurayPlayer) ["Status"] {
-	stateDescription=""[
-		options="0=FM,
-			1=BLUETOOTH,
-			2=AUX,
-			3=PORTABLE,
-			4=ARC,
-			5=OPTICAL1,
-			6=OPTICAL2,
-			7=HDMI1,
-			8=HDMI2"
-	]
-}
-
-Number HDMI_SWITCH_3_Input "HDMI Switch 3 Input" <mediacontrol> (Fernseher) ["Status"] {
-	stateDescription=""[
-		options="0=HDMI1,
-			1=HDMI2,
-			2=HDMI3"
-	]
-}
-
-Number HDMI_SWITCH_5_Input "HDMI Switch 5 Input" <mediacontrol> (Fernseher) ["Status"] {
-	stateDescription=""[
-		options="0=HDMI1,
-			1=HDMI2,
-			2=HDMI3,
-			3=HDMI4,
-			5=HDMI5"
-	]
-}
 
 // Items for voice commands
 

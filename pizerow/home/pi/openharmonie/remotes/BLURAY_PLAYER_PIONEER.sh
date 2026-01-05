@@ -12,7 +12,7 @@ if [[ "$CMD" = "REMOTE_POWER" ]]
     then
         # Preflight code 0xa6a7
         # Power multiple times
-        for i in {1..4}; do
+        for i in {1..2}; do
             ir-ctl -d /dev/lirc-tx -k /home/pi/openharmonie/remotes/toml/BLURAY_PLAYER_PIONEER.toml -K REMOTE_PREFLIGHT -K $CMD --gap 20000
             sleep 0.125 #125000 ms, default for --gap of ir-ctl, but because of the preflight, a loop is used here
         done

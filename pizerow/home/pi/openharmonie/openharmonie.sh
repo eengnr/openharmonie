@@ -21,7 +21,7 @@ do
         # Execute command in background
         # Otherwise mosquitto_sub could hang/crash if sending is not finished, but next command is already received
         (/home/pi/openharmonie/remotes/send_command.sh $line) &
-        sleep .5 # Pause shortly to ignore too fast inputs
+        sleep .4 # Pause shortly to ignore too fast inputs
         : > $mqttpipe # Clear pipe
     fi
     sleep .1
