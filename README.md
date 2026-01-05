@@ -259,7 +259,7 @@ See `/etc/openhab/sitemaps/openharmonie.sitemap`
 
 - Add a new user with name `openharmonie`
 
-  `$ sudo adduser --no-create-home openharmonie`
+  `$ sudo adduser openharmonie`
 
 - Enter `openharmonie` as password and confirm all other values
 
