@@ -399,9 +399,14 @@ const remotes = {
   LAPTOP_LINUX_RemoteControl: {
     device: 'LAPTOP_LINUX',
     commands: {
+      KEY_ESC: '1',
+      KEY_ENTER: '28',
       KEY_SPACE: '32',
+      KEY_F: '33',
+      KEY_UP: '103',
       KEY_LEFT: '105',
       KEY_RIGHT: '106',
+      KEY_DOWN: '108',
     },
   },
 };
@@ -560,7 +565,7 @@ const queueDeviceFunction = {
      */
     getDeviceWakeUpTime: () => {
       if (previousActivity === activities['PowerOff']) {
-        return 14000;
+        return 16000;
       } else {
         return 0;
       }
@@ -584,7 +589,7 @@ const queueDeviceFunction = {
       queueCommand(
         items.getItem('BLURAY_PLAYER_PIONEER_RemoteControl'),
         remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_FUNCTION'],
-        3500,
+        4000,
       );
       // Push x times 'Right' or 'Left' depending on the input source and wait
       for (let i = 0; i < pushes; i++) {
@@ -822,10 +827,11 @@ const changeToActivity = {
       // Workaround for input keyevent
       queueCommand(items.getItem('FIRETV_RemoteControl'), remotes['FIRETV_RemoteControl'].commands['KEY_BACK']);
       queueCommand(items.getItem('FIRETV_RemoteControl'), remotes['FIRETV_RemoteControl'].commands['KEY_HOMEPAGE']);
-      queuePause(Math.max(4000, queueDeviceFunction['BLURAY_PLAYER_PIONEER'].getDeviceWakeUpTime() - 5000));
       // After Fire TV sends signal, change inputs, otherwise screen flickers
-      queueInputChange['HDMI_SWITCH_5'](inputs['HDMI_SWITCH_5_Input']['HDMI1'], 5000);
-      queueInputChange['BLURAY_PLAYER_PIONEER'](inputs['BLURAY_PLAYER_PIONEER_Input']['HDMI1']);
+      queueInputChange['HDMI_SWITCH_5'](inputs['HDMI_SWITCH_5_Input']['HDMI2']);
+      queuePause(Math.max(2000, queueDeviceFunction['BLURAY_PLAYER_PIONEER'].getDeviceWakeUpTime() - 5000));
+      queueInputChange['BLURAY_PLAYER_PIONEER'](inputs['BLURAY_PLAYER_PIONEER_Input']['HDMI1'], 5000); // Wait until input is fully loaded
+      queueInputChange['HDMI_SWITCH_5'](inputs['HDMI_SWITCH_5_Input']['HDMI1']);
     },
     onEnter: () => {},
     onFinish: () => {},
@@ -883,9 +889,10 @@ const changeToActivity = {
       queuePowerState['RECEIVER_SAMSUNG_KD_OnOff']('OFF');
     },
     inputStates: () => {
-      queuePause(queueDeviceFunction['BLURAY_PLAYER_PIONEER'].getDeviceWakeUpTime());
-      queueInputChange['HDMI_SWITCH_5'](inputs['HDMI_SWITCH_5_Input']['HDMI5'], 5000);
-      queueInputChange['BLURAY_PLAYER_PIONEER'](inputs['BLURAY_PLAYER_PIONEER_Input']['HDMI1']);
+      queueInputChange['HDMI_SWITCH_5'](inputs['HDMI_SWITCH_5_Input']['HDMI2']);
+      queuePause(Math.max(2000, queueDeviceFunction['BLURAY_PLAYER_PIONEER'].getDeviceWakeUpTime()));
+      queueInputChange['BLURAY_PLAYER_PIONEER'](inputs['BLURAY_PLAYER_PIONEER_Input']['HDMI1'], 4000);
+      queueInputChange['HDMI_SWITCH_5'](inputs['HDMI_SWITCH_5_Input']['HDMI5']);
     },
     onEnter: () => {
       // Set volume to a moderate level
@@ -902,9 +909,10 @@ const changeToActivity = {
       queuePowerState['RECEIVER_SAMSUNG_KD_OnOff']('OFF');
     },
     inputStates: () => {
-      queuePause(queueDeviceFunction['BLURAY_PLAYER_PIONEER'].getDeviceWakeUpTime());
-      queueInputChange['HDMI_SWITCH_5'](inputs['HDMI_SWITCH_5_Input']['HDMI4'], 5000);
-      queueInputChange['BLURAY_PLAYER_PIONEER'](inputs['BLURAY_PLAYER_PIONEER_Input']['HDMI1']);
+      queueInputChange['HDMI_SWITCH_5'](inputs['HDMI_SWITCH_5_Input']['HDMI2']);
+      queuePause(Math.max(2000, queueDeviceFunction['BLURAY_PLAYER_PIONEER'].getDeviceWakeUpTime()));
+      queueInputChange['BLURAY_PLAYER_PIONEER'](inputs['BLURAY_PLAYER_PIONEER_Input']['HDMI1'], 4000);
+      queueInputChange['HDMI_SWITCH_5'](inputs['HDMI_SWITCH_5_Input']['HDMI4']);
     },
     onEnter: () => {},
     onFinish: () => {},
@@ -1319,6 +1327,37 @@ const activityCommands = {
         .getItem('LAPTOP_LINUX_RemoteControl')
         .sendCommand(remotes['LAPTOP_LINUX_RemoteControl'].commands['KEY_RIGHT']);
     },
+    OPENHARMONIE_OK: () => {
+      items
+        .getItem('LAPTOP_LINUX_RemoteControl')
+        .sendCommand(remotes['LAPTOP_LINUX_RemoteControl'].commands['KEY_ENTER']);
+    },
+    OPENHARMONIE_FORMAT: () => {
+      items.getItem('LAPTOP_LINUX_RemoteControl').sendCommand(remotes['LAPTOP_LINUX_RemoteControl'].commands['KEY_F']);
+    },
+    OPENHARMONIE_UP: () => {
+      items.getItem('LAPTOP_LINUX_RemoteControl').sendCommand(remotes['LAPTOP_LINUX_RemoteControl'].commands['KEY_UP']);
+    },
+    OPENHARMONIE_DOWN: () => {
+      items
+        .getItem('LAPTOP_LINUX_RemoteControl')
+        .sendCommand(remotes['LAPTOP_LINUX_RemoteControl'].commands['KEY_DOWN']);
+    },
+    OPENHARMONIE_LEFT: () => {
+      items
+        .getItem('LAPTOP_LINUX_RemoteControl')
+        .sendCommand(remotes['LAPTOP_LINUX_RemoteControl'].commands['KEY_LEFT']);
+    },
+    OPENHARMONIE_RIGHT: () => {
+      items
+        .getItem('LAPTOP_LINUX_RemoteControl')
+        .sendCommand(remotes['LAPTOP_LINUX_RemoteControl'].commands['KEY_RIGHT']);
+    },
+    OPENHARMONIE_BACK: () => {
+      items
+        .getItem('LAPTOP_LINUX_RemoteControl')
+        .sendCommand(remotes['LAPTOP_LINUX_RemoteControl'].commands['KEY_ESC']);
+    },
   },
   default: {
     OPENHARMONIE_POWER: () => {
@@ -1671,45 +1710,48 @@ rules.JSRule({
  * Single button presses are sent directly, multiple button presses are queued
  */
 const voiceCommands = {
-  openHARMONIE_AVC_Activity_TV: () => {
+  openHARMONIE_Matter_Activity_PowerOff: () => {
+    startActivity(activities['PowerOff']);
+  },
+  openHARMONIE_Matter_Activity_TV: () => {
     startActivity(activities['TV']);
   },
-  openHARMONIE_AVC_Activity_FireTV: () => {
+  openHARMONIE_Matter_Activity_FireTV: () => {
     startActivity(activities['FireTV']);
   },
-  openHARMONIE_AVC_Activity_Chromecast: () => {
+  openHARMONIE_Matter_Activity_Chromecast: () => {
     startActivity(activities['Chromecast']);
   },
-  openHARMONIE_AVC_Activity_Film: () => {
+  openHARMONIE_Matter_Activity_Film: () => {
     startActivity(activities['Film']);
   },
-  openHARMONIE_AVC_Activity_Wii: () => {
+  openHARMONIE_Matter_Activity_Wii: () => {
     startActivity(activities['Wii']);
   },
-  openHARMONIE_AVC_Activity_HDMI: () => {
+  openHARMONIE_Matter_Activity_HDMI: () => {
     startActivity(activities['HDMI']);
   },
-  openHARMONIE_AVC_Button_Pause: () => {
+  openHARMONIE_Matter_Button_Pause: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
       .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_PAUSE']);
   },
-  openHARMONIE_AVC_Button_Play: () => {
+  openHARMONIE_Matter_Button_Play: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
       .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_PAUSEPLAY']);
   },
-  openHARMONIE_AVC_Button_VolUp: () => {
+  openHARMONIE_Matter_Button_VolUp: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
       .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_VOLUMEUP']);
   },
-  openHARMONIE_AVC_Button_VolDown: () => {
+  openHARMONIE_Matter_Button_VolDown: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
       .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_VOLUMEDOWN']);
   },
-  openHARMONIE_AVC_Button_Power_TV: () => {
+  openHARMONIE_Matter_Button_Power_TV: () => {
     queueCommand(
       items.getItem('TV_TELEFUNKEN_QU50K800_RemoteControl'),
       remotes['TV_TELEFUNKEN_QU50K800_RemoteControl'].commands['REMOTE_POWER'],
@@ -1718,72 +1760,72 @@ const voiceCommands = {
     // Correct input states, because Chromecast will boot up with TV
     voiceCommands['openHARMONIE_AVC_Button_Input']();
   },
-  openHARMONIE_AVC_Button_Power_Bluray: () => {
+  openHARMONIE_Matter_Button_Power_Bluray: () => {
     items
       .getItem('BLURAY_PLAYER_PIONEER_RemoteControl')
       .sendCommand(remotes['BLURAY_PLAYER_PIONEER_RemoteControl'].commands['REMOTE_POWER']);
   },
-  openHARMONIE_AVC_Button_Power_Receiver: () => {
+  openHARMONIE_Matter_Button_Power_Receiver: () => {
     items
       .getItem('RECEIVER_SAMSUNG_KD_RemoteControl')
       .sendCommand(remotes['RECEIVER_SAMSUNG_KD_RemoteControl'].commands['REMOTE_POWER']);
   },
-  openHARMONIE_AVC_Button_Input: () => {
+  openHARMONIE_Matter_Button_Input: () => {
     const currentActivity = getKey(activities, items.getItem('OPENHARMONIE_Activity_Started').state);
     // queues:
     changeToActivity[currentActivity].inputStates();
   },
-  openHARMONIE_AVC_Favorite_DasErste: () => {
+  openHARMONIE_Matter_Favorite_DasErste: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
       .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_TV_ARD']);
   },
-  openHARMONIE_AVC_Favorite_ZDF: () => {
+  openHARMONIE_Matter_Favorite_ZDF: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
       .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_TV_ZDF']);
   },
-  openHARMONIE_AVC_Favorite_BR: () => {
+  openHARMONIE_Matter_Favorite_BR: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
       .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_TV_BR']);
   },
-  openHARMONIE_AVC_Favorite_RTL: () => {
+  openHARMONIE_Matter_Favorite_RTL: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
       .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_TV_RTL']);
   },
-  openHARMONIE_AVC_Favorite_Sat1: () => {
+  openHARMONIE_Matter_Favorite_Sat1: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
       .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_TV_SAT1']);
   },
-  openHARMONIE_AVC_Favorite_ProSieben: () => {
+  openHARMONIE_Matter_Favorite_ProSieben: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
       .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_TV_PRO7']);
   },
-  openHARMONIE_AVC_Favorite_RTLPlus: () => {
+  openHARMONIE_Matter_Favorite_RTLPlus: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
       .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_APP_RTLPLUS']);
   },
-  openHARMONIE_AVC_Favorite_Netflix: () => {
+  openHARMONIE_Matter_Favorite_Netflix: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
       .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_APP_NETFLIX']);
   },
-  openHARMONIE_AVC_Favorite_Disney: () => {
+  openHARMONIE_Matter_Favorite_Disney: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
       .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_APP_DISNEY']);
   },
-  openHARMONIE_AVC_Favorite_Joyn: () => {
+  openHARMONIE_Matter_Favorite_Joyn: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
       .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_APP_JOYN']);
   },
-  openHARMONIE_AVC_Favorite_AmazonVideo: () => {
+  openHARMONIE_Matter_Favorite_AmazonVideo: () => {
     items
       .getItem('OPENHARMONIE_RemoteControl')
       .sendCommand(remotes['OPENHARMONIE_RemoteControl'].commands['OPENHARMONIE_APP_AMAZONVIDEO']);
@@ -1791,24 +1833,18 @@ const voiceCommands = {
 };
 
 /**
- * Rule to start or stop activities with voice commands
- * State Update trigger, because switches stay on/off
+ * Rule to start activities with voice commands
  */
 rules.JSRule({
   name: 'openHARMONIE_Voice_Commands',
-  triggers: [triggers.GroupStateUpdateTrigger('openHARMONIE_AVC_Group')],
+  triggers: [triggers.GroupStateChangeTrigger('openHARMONIE_Matter_Group')],
   execute: (event) => {
-    if (event.receivedState === 'ON') {
+    // Items turn to OFF automatically after 1 second
+    if (event.newState === 'ON') {
       const itemName = event.itemName;
       if (typeof voiceCommands[itemName] === 'function') {
         voiceCommands[itemName]();
       }
-    }
-    if (
-      event.receivedState === 'OFF' &&
-      items.getItem('OPENHARMONIE_Activity_Starting').state !== activities['PowerOff']
-    ) {
-      items.getItem('OPENHARMONIE_Activity_Starting').sendCommand(activities['PowerOff']);
     }
   },
 });

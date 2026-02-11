@@ -51,6 +51,16 @@ sitemap openharmonie label="openHARMONIE" {
             5:1:10="HOME"=home-outline-rounded,
             5:3:17="BACK"=arrow-back-rounded
         ] visibility=[OPENHARMONIE_Activity_Starting==4]
+        // ## HDMI
+        Buttongrid label="FILM" icon=camera-control item=OPENHARMONIE_RemoteControl buttons=[
+            1:2:12="🔼"=keyboard-arrow-up-rounded,
+            2:1:14="◀️"=chevron-left-rounded,
+            2:2:16="OK"=ok-button,
+            2:3:15="▶️"=chevron-right-rounded,
+            3:2:13="🔽"=keyboard-arrow-down-rounded,
+            4:1:29="FULLSCREEN"=lucide_fullscreen,
+            4:3:17="BACK"=arrow-back-rounded
+        ] visibility=[OPENHARMONIE_Activity_Starting==6]
         // # VOLUME/CHANNEL BUTTONS
         // ## TV
         Buttongrid item=OPENHARMONIE_RemoteControl buttons=[
@@ -122,9 +132,9 @@ sitemap openharmonie label="openHARMONIE" {
         ] visibility=[OPENHARMONIE_Activity_Starting==4]
         // ## HDMI
         Buttongrid item=OPENHARMONIE_RemoteControl buttons=[
-            1:2:22="PAUSE"=pause-rounded,
+            1:2:42="PAUSE"=pause-rounded,
             2:1:19="REWIND"=fast-rewind-rounded,
-            2:2:20="PLAY"=play-pause-solid,
+            2:2:20="PLAY"=play-arrow-rounded,
             2:3:21="FORWARD"=fast-forward-rounded
         ] visibility=[OPENHARMONIE_Activity_Starting==6]
         // # SPECIFIC BUTTONS

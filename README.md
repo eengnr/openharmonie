@@ -6,7 +6,7 @@
 
 With this project the Logitech Harmony Hub should be rebuilt as a proof of concept.
 
-It should be possible to start different activities (watch TV, watch Fire TV, watch Bluray, ...) from a web UI/app (virtual openHARMONIE remote), Alexa voice commands or a physical remote.
+It should be possible to start different activities (watch TV, watch Fire TV, watch Bluray, ...) from a web UI/app (virtual openHARMONIE remote), voice commands or a physical remote.
 
 ## Motivation and background
 
@@ -35,7 +35,7 @@ That's why I'm looking for an alternative. And what could be better than buildin
 - ✅ Receive remote control command from additional physical remote
 - ✅ Activity logic
 - ✅ UI on smartphone (openHAB sitemaps)
-- ✅ Alexa commands
+- ✅ Voice commands
 - 0️⃣ 3D printed housing
 - 0️⃣ Refactor code to node modules
 - 🚧 Refactor documentation and move to a repository
@@ -49,7 +49,7 @@ It took me almost three months to figure everything out and implement it.
 
 ### Skills and basic software setup
 
-- openHAB (openHABian) is set up and running on Raspberry Pi 5 (Bookworm with openHAB 5.1.0)
+- openHAB (openHABian) is set up and running on Raspberry Pi 5 (Bookworm with openHAB 5.1.1)
 - openHAB has the JavaScript binding installed and the openhab_rules_tools
 - Knowledge about how to use openHAB is already available
 - Raspbian Lite is set up and running on Raspberry Pi Zero W (Bullseye, Bookworm does not work properly for this as of March 2025!)
@@ -201,7 +201,7 @@ These phases are defined for each activity:
 
 All possible activities are predefined in the metadata of the `OPENHARMONIE_Activity_Starting` item to be selected from the UI.
 
-Activities can then be triggered either by buttons of the physical/virtual openHARMONIE or by Alexa voice commands (or anything else available in openHAB).
+Activities can then be triggered either by buttons of the physical/virtual openHARMONIE or by voice commands (or anything else available in openHAB).
 
 ### Sitemap
 
@@ -217,7 +217,7 @@ Additionally, the sitemap uses light controls which are not part of the setup he
 
 ### Voice commands
 
-We need a group with switches which will be available for Alexa.
+We need a group with switches which will be available via Matter. openHAB acts as a Matter Bridge and provides the switches.
 
 See `/etc/openhab/etc/items/openharmonie.items`
 
@@ -874,25 +874,22 @@ Simlar to the IR sender/receiver devices a named device for the serial connectio
 
 - Connect to it!
 
-## Alexa voice commands integration
+## Voice commands integration
 
-To make everything controllable from Alexa voice commands, a mixture of openHAB items and Alexa routines is necessary.
+To make everything controllable from voice commands, the Matter binding needs to be installed in openHAB.
+Please check the documentation how to install it and connect it to your voice assistant, e.g. an Amazon Echo, Google Nest or Apple Homepod.
 
-For every command (e.g. start an activity, start a favorite, pause, play, ...) we need a Switch item with Alexa `ToggleState` metadata.
+After installation of the Matter binding, openHAB acts as a Matter bridge and can expose items to the Matter fabric.
 
-All these items are in one group with Alexa `Other` metadata.
-With this approach, we don't spam the devices inbox of the Alexa app.
+For every command (e.g. start an activity, start a favorite, pause, play, ...) we need a Switch item with Matter `OnOffLight` metadata.
 
-The group and its items can then be discovered in the Alexa app. Afterwards, create routines for each voice command.
+Note: It's only possible to expose lights or power outlets as controlees via Matter.
 
-E.g. for the voice command "TV on" create a routine which turns the "TV" toggle of the "openHARMONIE" device to ON and so on.
-For "Pause with openHARMONIE" create a routine which then turns the "Pause" toggle to ON and so on.
-This has to be done for every activity, favourite, button press, ...
+The switch items are part of a group and the items can then be discovered e.g. in the Alexa app. Afterwards, if necessary a routine can be created for a specific switch as voice command.
 
-As alternative, you can move the activity and favorite Items out of the group and have them as standalone "Devices" in Alexa. Then you can directly say on/off for them.
-But for single button presses, the Switch items should be part of the group.
+E.g. for "Pause with openHARMONIE" create a routine which then turns the "Pause" toggle to ON and so on.
 
-Note: If Alexa says that no new device was found, try to change the label texts. They won't be used anyways for the voice commands, just to identify the correct "switch" when creating a routine.
+The same should be possible with a Google Nest or Apple Homepod.
 
 ## Starting up
 

@@ -365,9 +365,14 @@ Number HDMI_SWITCH_5_RemoteControl "HDMI Switch 5 Fernbedienung" <mediacontrol> 
 
 Number LAPTOP_LINUX_RemoteControl "Laptop Linux Fernbedienung" <mediacontrol> (openHARMONIE_RemoteControl_LaptopLinux_Group) ["RemoteControl"] {
 	stateDescription=""[
-		options="32=KEY_SPACE,
+		options="1=KEY_ESC,
+			28=KEY_ENTER,
+			32=KEY_SPACE,
+			33=KEY_F,
+			103=KEY_UP,
 			105=KEY_LEFT,
-			106=KEY_RIGHT"
+			106=KEY_RIGHT,
+			108=KEY_DOWN"
 	]
 }
 
@@ -377,31 +382,32 @@ Switch TV_TELEFUNKEN_QU50K800_OnOff "Fernseher Schalter" <switch> (Fernseher) ["
 Switch BLURAY_PLAYER_PIONEER_OnOff "Bluray Player Schalter" <switch> (BlurayPlayer) ["Switch"]
 Switch RECEIVER_SAMSUNG_KD_OnOff "Receiver Schalter" <switch> (Receiver) ["Switch"]
 
-// Items for voice commands
+// Matter items for voice commands
 
-Group openHARMONIE_AVC_Group "openHARMONIE" <mediacontrol> (openHARMONIE_Group) ["RemoteControl"] {alexa="Other"}
-Switch openHARMONIE_AVC_Activity_TV "Fernseher" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Activity_FireTV "Fire TV" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Activity_Chromecast "Chromecast" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Activity_Film "Film" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Activity_Wii "Wii" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Activity_HDMI "HDMI" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Button_Pause "openHARMONIE-Pause" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Button_Play "openHARMONIE-Wiedergabe" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Button_VolUp "openHARMONIE-Lauter" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Button_VolDown "openHARMONIE-Leiser" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Button_Power_TV "openHARMONIE-Power-TV" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Button_Power_Bluray "openHARMONIE-Power-Bluray" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Button_Power_Receiver "openHARMONIE-Power-Receiver" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Button_Input "openHARMONIE-Input" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Favorite_DasErste "Das Erste" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Favorite_ZDF "ZDF" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Favorite_BR "BR" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Favorite_RTL "RTL" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Favorite_Sat1 "Sat.1" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Favorite_ProSieben "Pro Sieben" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Favorite_RTLPlus "RTL Plus" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Favorite_Netflix "Netflix" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Favorite_Disney "Disney Plus" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Favorite_Joyn "Joyn" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
-Switch openHARMONIE_AVC_Favorite_AmazonVideo "Amazon Video" (openHARMONIE_AVC_Group) {alexa="ToggleState"}
+Group openHARMONIE_Matter_Group "openHARMONIE Sprachkommandos" <mediacontrol> (openHARMONIE_Group) ["RemoteControl"]
+Switch openHARMONIE_Matter_Activity_PowerOff "openHarmonie Sprachkommando Power Off" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="Power Off"] }
+Switch openHARMONIE_Matter_Activity_TV "openHarmonie Sprachkommando Fernseher" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="Fernseher"] }
+Switch openHARMONIE_Matter_Activity_FireTV "openHarmonie Sprachkommando Fire TV" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="Fire TV"] }
+Switch openHARMONIE_Matter_Activity_Chromecast "openHarmonie Sprachkommando Chromecast" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="Chromecast"] }
+Switch openHARMONIE_Matter_Activity_Film "openHarmonie Sprachkommando Film" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="Film"] }
+Switch openHARMONIE_Matter_Activity_Wii "openHarmonie Sprachkommando Wii" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="Wii"] }
+Switch openHARMONIE_Matter_Activity_HDMI "openHarmonie Sprachkommando HDMI" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="HDMI"] }
+Switch openHARMONIE_Matter_Button_Pause "openHARMONIE Sprachkommando Pause" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="openHARMONIE Pause"] }
+Switch openHARMONIE_Matter_Button_Play "openHARMONIE Sprachkommando Wiedergabe" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="openHARMONIE Wiedergabe"] }
+Switch openHARMONIE_Matter_Button_VolUp "openHARMONIE Sprachkommando Lauter" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="openHARMONIE Lauter"] }
+Switch openHARMONIE_Matter_Button_VolDown "openHARMONIE Sprachkommando Leiser" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="openHARMONIE Leiser"] }
+Switch openHARMONIE_Matter_Button_Power_TV "openHARMONIE Sprachkommando Power TV" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="openHARMONIE Power TV"] }
+Switch openHARMONIE_Matter_Button_Power_Bluray "openHARMONIE Sprachkommando Power Bluray" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="openHARMONIE Power Bluray"] }
+Switch openHARMONIE_Matter_Button_Power_Receiver "openHARMONIE Sprachkommando Power Receiver" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="openHARMONIE Power Receiver"]}
+Switch openHARMONIE_Matter_Button_Input "openHARMONIE Sprachkommando Input" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="openHARMONIE Input"] }
+Switch openHARMONIE_Matter_Favorite_DasErste "openHarmonie Sprachkommando Das Erste" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="Das Erste"] }
+Switch openHARMONIE_Matter_Favorite_ZDF "openHarmonie Sprachkommando ZDF" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="ZDF"] }
+Switch openHARMONIE_Matter_Favorite_BR "openHarmonie Sprachkommando BR" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="BR"] }
+Switch openHARMONIE_Matter_Favorite_RTL "openHarmonie Sprachkommando RTL" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="RTL"] }
+Switch openHARMONIE_Matter_Favorite_Sat1 "openHarmonie Sprachkommando Sat.1" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="Sat.1"] }
+Switch openHARMONIE_Matter_Favorite_ProSieben "openHarmonie Sprachkommando Pro Sieben" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="Pro Sieben"] }
+Switch openHARMONIE_Matter_Favorite_RTLPlus "openHarmonie Sprachkommando RTL Plus" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="RTL+"] }
+Switch openHARMONIE_Matter_Favorite_Netflix "openHarmonie Sprachkommando Netflix" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="Netflix"] }
+Switch openHARMONIE_Matter_Favorite_Disney "openHarmonie Sprachkommando Disney Plus" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="Disney+"] }
+Switch openHARMONIE_Matter_Favorite_Joyn "openHarmonie Sprachkommando Joyn" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="Joyn"] }
+Switch openHARMONIE_Matter_Favorite_AmazonVideo "openHarmonie Sprachkommando Amazon Video" (openHARMONIE_Matter_Group) [Switch] { expire="0h0m1s,OFF", matter="OnOffLight" [fixedLabels="device=openHARMONIE", label="Prime Video"] }
